@@ -1,21 +1,27 @@
 function fetchStockPrice() {
-    let symbol = document.getElementById("stock-symbol").value;
+    let symbol = document.getElementById("stock-symbol").value.trim().toUpperCase();
+
     if (!symbol) {
         alert("Please enter a stock symbol.");
         return;
     }
 
     fetch(`/api/stock/?symbol=${symbol}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
-                document.getElementById("result").innerText = "Error: " + data.error;
+                document.getElementById("result").innerHTML = `<span style="color:red;">Error: ${data.error}</span>`;
             } else {
-                document.getElementById("result").innerText = `Stock Price of ${data.symbol}: $${data.price.toFixed(2)}`;
+                document.getElementById("result").innerHTML = `<strong>Stock Price of ${data.symbol}:</strong> $${parseFloat(data.price).toFixed(2)}`;
             }
         })
         .catch(error => {
             console.error("Error fetching stock price:", error);
-            document.getElementById("result").innerText = "Failed to fetch stock price.";
+            document.getElementById("result").innerHTML = `<span style="color:red;">Failed to fetch stock price.</span>`;
         });
 }

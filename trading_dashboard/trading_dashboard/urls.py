@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from insidertrading import views
 
 """
 URL configuration for mysite project.
@@ -21,6 +22,22 @@ from django.contrib import admin
 from django.urls import path
 
 urlpatterns = [
+    # Django Admin Panel
     path('admin/', admin.site.urls),
-    path('', include('insidertrading.urls')),
+
+    # Homepage
+    path('', views.index, name='index'),
+
+    # Fix: Correct API route for fetching stock prices
+    path('api/stock/', views.get_stock_price, name='get_stock_price'),
+
+    # User Authentication
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
+    # Secure Dashboard
+    path('dashboard/', views.dashboard, name='dashboard'),
+
+    # Include additional routes from the 'insidertrading' app
+    path('insidertrading/', include('insidertrading.urls')),
 ]
