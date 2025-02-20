@@ -4,6 +4,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 import yfinance as yf
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 # Homepage View
 def index(request):
     return render(request, 'index.html')
@@ -23,6 +27,34 @@ def get_stock_price(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+def get_stock_history(request):
+    symbol = request.GET.get('symbol', '')
+    period = request.GET.get('period', '1y')
+
+    print(str(symbol) + " " + str(period))
+    try:
+        stock = yf.Ticker(symbol)
+        stock_info = stock.history(period=period)
+
+        print(str(stock_info))
+        if stock_info.empty:
+            #logger.error(f"Invalid stock symbol: {symbol}")
+            return JsonResponse({"error": "Invalid stock symbol"}, status=400)
+
+        history_data = {
+            "dates": stock_info.index.strftime('%Y-%m-%d').tolist(),
+            "prices": stock_info['Close'].tolist()
+        }
+
+        print(str(history_data))
+        return JsonResponse(history_data)
+
+    except Exception as e:
+        #logger.error(f"Error fetching stock history for {symbol}: {str(e)}")
+        
+        return JsonResponse({"error": str(e)}, status=500)
+
 
 # Login View
 def login_view(request):
