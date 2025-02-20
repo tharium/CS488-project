@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 import yfinance as yf
+from .forms import SignUpForm
+from django.contrib.auth.models import User
 
 # Homepage View
 def index(request):
@@ -50,5 +52,18 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     return render(request, 'dashboard.html')
+
+# Sign Up View
+def signup_view(request):
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')
+
+    else:
+        form = SignUpForm()
+
+    return render(request, 'signup.html', {'form': form})
 
 
