@@ -23,13 +23,14 @@ function fetchStockPrice() {
 }
 
 function fetchStockHistory(){
+    var selectedPeriod = document.getElementById("period-select").value;
     let symbol = document.getElementById("stock-symbol").value;
     if (!symbol) {
         alert("Please enter a stock symbol.");
         return;
     }
 
-    fetch(`/api/stock/history/?symbol=${symbol}`)
+    fetch(`/api/stock/history/?symbol=${symbol}&period=${selectedPeriod}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -65,8 +66,8 @@ function displayStockChart(dates, prices, symbol) {
                 data: prices,
                 borderColor: "rgb(62, 187, 79)",
                 borderWidth: 2,
-                pointBorderWidth: 0,
-                pointRadius: 0,
+                pointBorderWidth: 1,
+                pointRadius: 1,
                 fill: false,
             }]
         }

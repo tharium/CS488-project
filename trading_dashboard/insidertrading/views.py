@@ -30,7 +30,7 @@ def get_stock_price(request):
 
 def get_stock_history(request):
     symbol = request.GET.get('symbol', '')
-    period = request.GET.get('period', '1y')
+    period = request.GET.get('period', '')
 
     print(str(symbol) + " " + str(period))
     try:
