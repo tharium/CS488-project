@@ -37,7 +37,7 @@ def login_view(request):
         
         if user is not None:
             login(request, user)
-            return redirect('/')  # Redirect to homepage after login
+            return redirect('/dashboard')  # Redirect to homepage after login
         else:
             return render(request, 'login.html', {'error': 'Invalid credentials'})
 
@@ -51,7 +51,7 @@ def logout_view(request):
 # Dashboard View (Requires Login)
 @login_required
 def dashboard(request):
-    return render(request, 'dashboard.html')
+    return render(request, 'dashboard.html', {'user': request.user})
 
 # Sign Up View
 def signup_view(request):
@@ -65,5 +65,6 @@ def signup_view(request):
         form = SignUpForm()
 
     return render(request, 'signup.html', {'form': form})
+
 
 

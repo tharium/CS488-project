@@ -29,7 +29,7 @@
     <!-- Login Form -->
     <div class="login-container">
         <h3 class="mb-4">🔑 Login to Trading Dashboard</h3>
-        <form method="POST" action="/login">
+        <form method="POST" action="/login/">
             {% csrf_token %}
             <div class="mb-3">
                 <input type="text" class="form-control" name="username" placeholder="Username" required>
