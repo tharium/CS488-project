@@ -37,7 +37,7 @@ function fetchStockHistory(){
                 document.getElementById("result").innerText = "Error: " + data.error;
             } else {
                 document.getElementById("result").innerText = `Stock History for ${symbol}:`;
-
+                document.getElementById("watchlist-button").style.display = "block";
                 displayStockChart(data.dates, data.prices, symbol)
             }
         })
@@ -73,3 +73,40 @@ function displayStockChart(dates, prices, symbol) {
         }
     });
 }
+
+function addToWatchlist(){
+    let symbol = document.getElementById("stock-symbol").value.trim().toUpperCase();
+    
+    if (!symbol) {
+        alert("Please fetch stock data first.");
+        return;
+    }
+
+    fetch(`/watchlist/add/${symbol}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            "X-CSRFToken": getCSRFToken(),
+        },
+        body: `symbol=${symbol}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert("Error: " + data.error);
+        } else {
+            alert("Added to watchlist successfully!");
+        }
+    })
+    .catch(error => {
+        console.error("Error adding to watchlist:", error);
+        alert("Failed to add to watchlist.");
+    });
+}
+
+function getCSRFToken() {
+    return document.cookie.split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1];
+}
+

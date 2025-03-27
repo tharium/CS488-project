@@ -43,4 +43,17 @@ urlpatterns = [
 
     # Include additional routes from the 'insidertrading' app
     path('insidertrading/', include('insidertrading.urls')),
+
+    # add a stock to a watchlist
+    path('watchlist/add/<str:stock_ticker>/', views.add_stock, name='add_stock'),
+
+    path('register/', views.register_view, name='register'),
+
+    path('watchlist/', views.view_watchlist, name='view_watchlist'),
+
+    path('watchlist/remove/<str:stock_ticker>/', views.remove_stock, name='remove_stock'),
+
+    path('highprice/add/<str:stock_ticker>/<str:amount>/', views.add_high_price, name='add_high_price'),
+    
+    path('lowprice/add/<str:stock_ticker>/<str:amount>/', views.add_low_price, name='add_low_price'),
 ]
