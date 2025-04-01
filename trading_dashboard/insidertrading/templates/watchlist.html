@@ -5,6 +5,7 @@
 <head>
     <title>My Watchlist</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'css/watchlist_style.css' %}">
     <script src="{% static 'js/watchlist_script.js' %}"></script>
 </head>
 <body>
@@ -17,14 +18,19 @@
         <h2>Your Watchlist</h2>
         <ul>
             {% for stock in stocks %}
-            <li>
+            <li style="display: flex; justify-content: space-between; align-items: center;">
                 {{ stock.ticker }} - {{ stock.company_name }}
-                <form action="{% url 'remove_stock' stock.ticker %}" method="post" style="display:inline;">
+                <form action="{% url 'remove_stock' stock.ticker %}" method="post" style="display: flex; gap: 10px; align-items: center;">
                     {% csrf_token %}
-                    <input id="low-price-{{ stock.ticker }}" type="number" name="low_price" placeholder="Low Price" min="0">
-                    <input id="high-price-{{ stock.ticker }}" type="number" name="high_price" placeholder="High Price" min="0">
-                    <button type="button" class="btn btn-success" onclick="setPrice('{{ stock.ticker }}', 'low')">Set Low Price</button>
-                    <button type="button" class="btn btn-success" onclick="setPrice('{{ stock.ticker }}', 'high')">Set High Price</button>
+                    <button type="button" class="btn btn-primary" onclick="togglePriceInput('{{ stock.ticker }}')">Edit Stop Price</button>
+
+                    <div id="price-inputs-{{ stock.ticker }}" style="display:none;">
+                        <input id="low-price-{{ stock.ticker }}" type="number" name="low_price" placeholder="Low Price" min="0" display="none">
+                        <input id="high-price-{{ stock.ticker }}" type="number" name="high_price" placeholder="High Price" min="0" display="none">
+                        <button type="button" class="btn btn-success" onclick="setPrice('{{ stock.ticker }}', 'low')" display="none">Set Low Price</button>
+                        <button type="button" class="btn btn-success" onclick="setPrice('{{ stock.ticker }}', 'high')"display="none">Set High Price</button>
+                    </div>
+    
                     <button type="submit" class="btn btn-danger"
                         onclick="return confirm('Are you sure you want to remove {{ stock.ticker }} from your watchlist?')">
                         Remove

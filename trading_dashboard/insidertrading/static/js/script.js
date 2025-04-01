@@ -82,6 +82,8 @@ function addToWatchlist(){
         return;
     }
 
+    console.log("Adding to watchlist:", symbol);
+
     fetch(`/watchlist/add/${symbol}/`, {
         method: 'POST',
         headers: {
