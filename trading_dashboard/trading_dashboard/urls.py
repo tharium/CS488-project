@@ -30,10 +30,12 @@ urlpatterns = [
 
     # Fix: Correct API route for fetching stock prices
     path('api/stock/', views.get_stock_price, name='get_stock_price'),
+    path('api/stock/history/', views.get_stock_history, name='get_stock_history'),
 
     # User Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register_view, name='register'),
 
     # Secure Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),

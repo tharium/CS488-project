@@ -128,27 +128,5 @@
     <!-- Include Bootstrap JS and dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            // Simple password toggle functionality
-            $(".password-toggle").click(function() {
-                const inputField = $(this).siblings("input");
-                if (inputField.attr("type") === "password") {
-                    inputField.attr("type", "text");
-                    $(this).removeClass("fa-eye").addClass("fa-eye-slash");
-                } else {
-                    inputField.attr("type", "password");
-                    $(this).removeClass("fa-eye-slash").addClass("fa-eye");
-                }
-            });
-            
-            // Form submission handler
-            $("#updateAccountForm").submit(function (event) {
-                event.preventDefault();
-                alert("Account information updated successfully! (Replace with backend logic)");
-                window.location.href = "/dashboard";
-            });
-        });
-    </script>
 </body>
 </html>
