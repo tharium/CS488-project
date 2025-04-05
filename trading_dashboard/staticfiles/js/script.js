@@ -22,21 +22,22 @@ function fetchStockPrice() {
         });
 }
 
-function fetchStockHistory(){
+function fetchStockHistory() {
+    var selectedPeriod = document.getElementById("period-select").value;
     let symbol = document.getElementById("stock-symbol").value;
     if (!symbol) {
         alert("Please enter a stock symbol.");
         return;
     }
 
-    fetch(`/api/stock/history/?symbol=${symbol}`)
+    fetch(`/api/stock/history/?symbol=${symbol}&period=${selectedPeriod}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
                 document.getElementById("result").innerText = "Error: " + data.error;
             } else {
-                document.getElementById("result").innerText = `Stock History for ${data.symbol}:`;
-
+                document.getElementById("result").innerText = `Stock History for ${symbol}:`;
+                document.getElementById("watchlist-button").style.display = "block";
                 displayStockChart(data.dates, data.prices, symbol)
             }
         })
@@ -47,14 +48,16 @@ function fetchStockHistory(){
 }
 
 function displayStockChart(dates, prices, symbol) {
-    let ctx = document.getElementById("stockChart").getContext("2d");
 
-    //removes previous chart if existing
-    if(stockChart) {
+    if (stockChart) {
         stockChart.destroy();
     }
 
-    stockChart = new CharacterData(ctx, {
+    let ctx = document.getElementById("stockChart").getContext("2d");
+
+    symbol = symbol.toUpperCase();
+
+    stockChart = new Chart(ctx, {
         type: "line",
         data: {
             labels: dates,

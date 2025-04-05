@@ -12,4 +12,9 @@ urlpatterns = [
     path('watchlist/remove/<str:stock_ticker>/', views.remove_stock, name='remove_stock'),
     path('highprice/add/<str:stock_ticker>/<str:amount>/', views.add_high_price, name='add_high_price'),
     path('lowprice/add/<str:stock_ticker>/<str:amount>/', views.add_low_price, name='add_low_price'),
+    path('register/', views.register_view, name='register'),
+    path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]
