@@ -750,7 +750,7 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="container-box text-center">
+        <!-- <div class="container-box text-center">
             <h3 class="mb-4">Check Stock Prices</h3>
             <input type="text" class="form-control mb-3" id="stock-symbol" placeholder="Enter stock symbol">
             <button class="btn btn-primary" onclick="fetchStockHistory()">Get Stock Data</button>
@@ -766,7 +766,7 @@
             </select>
             <p id="result" class="mt-3"></p>
             <button id="watchlist-button" class="btn btn-secondary mt-3" style="display: none;" onclick="addToWatchlist()">Add to Watchlist</button>
-        </div>
+        </div> -->
         <div class="stock-display text-center">
             <canvas id="stockChart" width="600" height="600"></canvas>
 
@@ -860,19 +860,27 @@
 
                         <h3>Check Stock Prices</h3>
 
-
-
-                        <div class="input-group mb-4">
-
-                            <input type="text" class="form-control" id="stock-symbol" placeholder="Enter stock symbol (e.g., AAPL, MSFT, AMZN)">
-
-                            <button class="btn btn-primary" id="getStockPriceBtn">
-
-                                <i class="fas fa-search me-2"></i> Get Price
-
-                            </button>
-
+                        <div class="container-box text-center">
+                            <h3 class="mb-4">Check Stock Prices</h3>
+                            <input type="text" class="form-control mb-3" id="stock-symbol" placeholder="Enter stock symbol">
+                            <button class="btn btn-primary" onclick="fetchStockHistory()">Get Stock Data</button>
+                            <select class="period-select" id="period-select">
+                                <option value="1d">1 day</option>
+                                <option value="5d">5 days</option>
+                                <option value="1mo">1 mo.</option>
+                                <option value="3mo">3 mo.</option>
+                                <option value="6mo">6 mo.</option>
+                                <option value="1y">1 y</option>
+                                <option value="2y">2 y</option>
+                                <option value="ytd">YTD</option>
+                            </select>
+                            <p id="result" class="mt-3"></p>
+                            <button id="watchlist-button" class="btn btn-secondary mt-3" style="display: none;" onclick="addToWatchlist()">Add to Watchlist</button>
                         </div>
+                        <div class="stock-display text-center">
+                            <canvas id="stockChart" width="600" height="600"></canvas>
+
+                        
 
 
 
@@ -914,14 +922,6 @@
 
             </div>
 
-
-
-            <!-- Include JavaScript -->
-
-            <script src="/static/js/script.js"></script>
-
-
-
             <!-- Testimonials Section -->
 
             <section class="testimonials">
@@ -946,7 +946,7 @@
 
                                 <div class="testimonial-author">
 
-                                    <img src="/api/placeholder/100/100" alt="Sarah J.">
+                                    <!-- <img src="/api/placeholder/100/100" alt="Sarah J."> -->
 
                                     <div class="author-info">
 
@@ -976,7 +976,7 @@
 
                                 <div class="testimonial-author">
 
-                                    <img src="/api/placeholder/100/100" alt="Michael T.">
+                                    <!-- <img src="/api/placeholder/100/100" alt="Michael T."> -->
 
                                     <div class="author-info">
 
@@ -1006,7 +1006,7 @@
 
                                 <div class="testimonial-author">
 
-                                    <img src="/api/placeholder/100/100" alt="David R.">
+                                    <!-- <img src="/api/placeholder/100/100" alt="David R."> -->
 
                                     <div class="author-info">
 
@@ -1131,74 +1131,6 @@
             <!-- Scripts -->
 
             <script>
-
-                function fetchStockPrice() {
-
-                    const symbol = document.getElementById('stock-symbol').value.toUpperCase();
-
-                    const resultElement = document.getElementById('result');
-
-
-
-                    if (!symbol) {
-
-                        resultElement.innerHTML = '<span class="text-danger">Please enter a stock symbol</span>';
-
-                        return;
-
-                    }
-
-
-
-                    // Show loading spinner while fetching
-
-                    resultElement.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-
-
-
-                    //  Make API call
-
-                    fetch(`/api/stock/?symbol=${symbol}`)
-
-                        .then(response => response.json())
-
-                        .then(data => {
-
-                            if (data.error) {
-
-                                resultElement.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-
-                            } else {
-
-                                resultElement.innerHTML = `
-
-                                                <div class="alert alert-light p-4 shadow-sm">
-
-                                                    <h4>${data.symbol}</h4>
-
-                                                    <h2>$${data.price.toFixed(2)}</h2>
-
-                                                    <p class="mt-2 text-muted">Updated now</p>
-
-                                                </div>
-
-                                            `;
-
-                            }
-
-                        })
-
-                        .catch(error => {
-
-                            console.error("Error fetching stock price:", error);
-
-                            resultElement.innerHTML = `<div class="alert alert-danger">Failed to fetch stock price.</div>`;
-
-                        });
-
-                }
-
-
 
                 // Add smooth scrolling
 

@@ -11,7 +11,6 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.core.signing import Signer, BadSignature
 import yfinance as yf
-import random
 
 import logging
 logger = logging.getLogger(__name__)
@@ -121,25 +120,13 @@ def login_view(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        # Hardcoded Test User (Bypasses Database)
-        if username == "testuser" and password == "password":
-            request.session["logged_in"] = True  # Simulate login
-            messages.success(request, "Login successful!")
-            return redirect("/dashboard/")  # Redirect to dashboard
-
         #  Normal Authentication (For Real Users)
         user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            login(request, user)
-            return redirect('/')  # Redirect to homepage after login
-        else:
-            return render(request, 'login.html', {'error': 'Invalid credentials'})
 
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return redirect("/dashboard/")  # Redirect to dashboard
+                return redirect("/watchlist/")  # Redirect to dashboard
             else:
                 messages.error(request, "Please verify your email before logging in.")
         else:
@@ -154,7 +141,6 @@ def logout_view(request):
 
 # Dashboard View (Requires Login = locked)
 def dashboard(request):
-    return render(request, 'dashboard.html')
     if request.user.is_authenticated:
         return render(request, "dashboard.html")
     else:
@@ -192,7 +178,7 @@ def get_stock_history(request):
 
         print(str(stock_info))
         if stock_info.empty:
-            #logger.error(f"Invalid stock symbol: {symbol}")
+            
             return JsonResponse({"error": "Invalid stock symbol"}, status=400)
 
         history_data = {
@@ -204,7 +190,6 @@ def get_stock_history(request):
         return JsonResponse(history_data)
 
     except Exception as e:
-        #logger.error(f"Error fetching stock history for {symbol}: {str(e)}")
         
         return JsonResponse({"error": str(e)}, status=500)
 def index(request):
@@ -228,8 +213,8 @@ def register_view(request):
 
         # Create and save the user
         user = User.objects.create_user(username=username, password=password)
-        login(request, user)  # Log in the user immediately after registration
-        return redirect('/')  # Redirect to homepage or dashboard
+        login(request, user)
+        return redirect('dashboard')  
 
     return render(request, 'register.html')
 
