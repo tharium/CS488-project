@@ -30,8 +30,8 @@ def register_view(request):
     if request.method == "POST":
         username = request.POST["username"]
         email = request.POST["email"]
-        password1 = request.POST["password1"]
-        password2 = request.POST["password2"]
+        password1 = request.POST["password"]
+        password2 = request.POST["confirm_password"]
 
         # Validate password match
         if password1 != password2:
@@ -48,7 +48,9 @@ def register_view(request):
             return redirect("register")
 
         # Create inactive user
-        user = User.objects.create_user(username=username, email=email, password=password1, is_active=False)
+        user = User.objects.create_user(username=username, email=email, password=password1)
+        user.is_active = False  # Set user as inactive until email is verified
+        user.save()
 
         # Generate a verification token
         token = signer.sign(username)
@@ -58,13 +60,13 @@ def register_view(request):
         send_mail(
             "Verify Your Email - Trading Dashboard",
             f"Hello {username},\n\nClick the link below to verify your email:\n{verification_link}\n\nThank you!",
-            "no-reply@tradingdashboard.com",
+            "tradingdashboardbot@gmail.com",
             [email],
             fail_silently=False,
         )
 
         messages.success(request, "A verification email has been sent. Please check your email.")
-        return redirect("login")
+        return redirect("/")
 
     return render(request, "register.html")
 
@@ -126,9 +128,9 @@ def login_view(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return redirect("/watchlist/")  # Redirect to dashboard
+                return redirect("/") 
             else:
-                messages.error(request, "Please verify your email before logging in.")
+                return render(request, 'login.html', {'error': 'Invalid Credentials'})
         else:
             messages.error(request, "Invalid username or password.")
 
@@ -194,29 +196,6 @@ def get_stock_history(request):
         return JsonResponse({"error": str(e)}, status=500)
 def index(request):
     return render(request, 'index.html')
-
-
-def register_view(request):
-    if request.method == "POST":
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-
-        if password != confirm_password:
-            messages.error(request, "Passwords do not match")
-            return render(request, 'register.html')
-
-        # Check if username already exists
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already taken")
-            return render(request, 'register.html')
-
-        # Create and save the user
-        user = User.objects.create_user(username=username, password=password)
-        login(request, user)
-        return redirect('dashboard')  
-
-    return render(request, 'register.html')
 
 @login_required
 def add_stock(request, stock_ticker):
