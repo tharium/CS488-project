@@ -15,3 +15,7 @@ class Stock(models.Model):
 
     def __str__(self):
         return f"{self.ticker} - {self.company_name} - {self.sector}"
+    
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    verification_code = models.CharField(max_length=64, blank=True, null=True)

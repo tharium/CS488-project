@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Watchlist, Stock
+from .models import Watchlist, Stock, Profile
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
-from django.core.signing import Signer, BadSignature
+from django.core.signing import Signer, BadSignature, TimestampSigner
+import secrets
 import yfinance as yf
 
 import logging
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 def index(request):
     return render(request, 'index.html')
 # Initialize a signer instance for generating tokens
-signer = Signer()
+signer = TimestampSigner()
 
 # Store email verification codes temporarily
 verification_codes = {}
@@ -51,9 +52,13 @@ def register_view(request):
         user = User.objects.create_user(username=username, email=email, password=password1)
         user.is_active = False  # Set user as inactive until email is verified
         user.save()
-
         # Generate a verification token
-        token = signer.sign(username)
+
+        token = secrets.token_urlsafe(32)
+        print(token)
+        profile = Profile.objects.create(user=user, verification_code=token)
+        profile.save()
+
         verification_link = request.build_absolute_uri(f'/verify-email/{token}/')
 
         # Send verification email
@@ -73,12 +78,14 @@ def register_view(request):
 # Email Verification View
 def verify_email(request, token):
     try:
-        username = signer.unsign(token)
-        user = User.objects.get(username=username)
+        profile = Profile.objects.get(verification_code=token)
+        user = profile.user
 
         if not user.is_active:
             user.is_active = True
             user.save()
+            profile.verfication_code = None
+            profile.save()
             messages.success(request, "Your email has been verified! You can now log in.")
         else:
             messages.info(request, "Your email is already verified.")
@@ -118,18 +125,20 @@ def get_stock_history(request):
 
 # Login View
 def login_view(request):
+    print("Login view called")
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
 
-        #  Normal Authentication (For Real Users)
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
+            print("user is not none")
             if user.is_active:
                 login(request, user)
                 return redirect("/") 
             else:
+                print("user is not active, need to verify?")
                 return render(request, 'login.html', {'error': 'Invalid Credentials'})
         else:
             messages.error(request, "Invalid username or password.")
