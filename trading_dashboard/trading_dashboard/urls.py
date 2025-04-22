@@ -60,4 +60,6 @@ urlpatterns = [
     path('lowprice/add/<str:stock_ticker>/<str:amount>/', views.add_low_price, name='add_low_price'),
 
     path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
+
+    path("search-stock/", views.search_stock, name="search_stock"),
 ]

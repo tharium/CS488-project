@@ -1,4 +1,6 @@
-<<!DOCTYPE html>
+{% load static %}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- Chart.js for charts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="{% static 'js/dashboard_script.js' %}"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -521,74 +524,15 @@
                 </div>
             </div>
             
-            <!-- Recent Transactions -->
             <div class="dashboard-section" id="transactions">
-                <h2>Recent Transactions</h2>
+                <h2>Search</h2>
                 <div class="card">
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Type</th>
-                                        <th>Symbol</th>
-                                        <th>Shares</th>
-                                        <th>Price</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>Mar 10, 2025</td>
-                                        <td><span class="badge badge-success">Buy</span></td>
-                                        <td>AAPL</td>
-                                        <td>10</td>
-                                        <td>$182.50</td>
-                                        <td>$1,825.00</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Mar 8, 2025</td>
-                                        <td><span class="badge badge-danger">Sell</span></td>
-                                        <td>NFLX</td>
-                                        <td>5</td>
-                                        <td>$605.75</td>
-                                        <td>$3,028.75</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Mar 5, 2025</td>
-                                        <td><span class="badge badge-success">Buy</span></td>
-                                        <td>MSFT</td>
-                                        <td>5</td>
-                                        <td>$315.20</td>
-                                        <td>$1,576.00</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Mar 1, 2025</td>
-                                        <td><span class="badge badge-secondary">Dividend</span></td>
-                                        <td>JNJ</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>$42.50</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Feb 28, 2025</td>
-                                        <td><span class="badge badge-primary">Deposit</span></td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>-</td>
-                                        <td>$5,000.00</td>
-                                        <td><span class="badge badge-success">Completed</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <a href="#" class="btn btn-outline-secondary btn-sm">View All Transactions</a>
+                        <form id="search-form">
+                            <input type="text" name="q" placeholder="Search stocks..." value="">
+                            <button type="submit">Search</button>
+                        </form>
+                        <div id="search-result-container"></div>
                     </div>
                 </div>
             </div>
@@ -607,83 +551,60 @@
                                         <i class="fas fa-plus"></i> Add
                                     </button>
                                 </div>
+
+                                {% for stock in stocks %}
                                 <div class="watchlist-item d-flex justify-content-between align-items-center">
                                     <div>
-                                        <strong>META</strong> - Meta Platforms Inc.
+                                        <strong>{{ stock.ticker }}</strong> - {{ stock.company_name }}
+                                    
                                     </div>
-                                    <div>
-                                        <span class="positive-value mr-2">$485.20 (+1.7%)</span>
-                                        <canvas class="sparkline-container" data-values="[480,478,482,483,481,485]"></canvas>
-                                    </div>
-                                </div>
-                                <div class="watchlist-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>NVDA</strong> - NVIDIA Corporation
-                                    </div>
-                                    <div>
-                                        <span class="positive-value mr-2">$875.40 (+3.2%)</span>
-                                        <canvas class="sparkline-container" data-values="[850,858,865,862,870,875]"></canvas>
-                                    </div>
-                                </div>
-                                <div class="watchlist-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>JPM</strong> - JPMorgan Chase & Co.
-                                    </div>
-                                    <div>
-                                        <span class="negative-value mr-2">$195.30 (-0.5%)</span>
-                                        <canvas class="sparkline-container" data-values="[196,197,195.5,196,195.8,195.3]"></canvas>
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-2">
+                                            Current: ${{ stock.current_price }} 
+                                        </span>
+                                       
+                                        <span class="mr-2">
+                                            High: ${{ stock.high_price }}
+                                        </span>
+
+                                        <span class="mr-2">
+                                            Low: ${{ stock.low_price }}
+                                        </span>
+
+                                        <span class="mr-2">
+                                            Volume: {{ stock.volume }}
+                                        </span>
+                                    
                                     </div>
                                 </div>
-                                <div class="watchlist-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>DIS</strong> - The Walt Disney Company
-                                    </div>
-                                    <div>
-                                        <span class="positive-value mr-2">$110.25 (+0.8%)</span>
-                                        <canvas class="sparkline-container" data-values="[109,108.5,109.2,109.5,110,110.25]"></canvas>
-                                    </div>
-                                </div>
-                                <div class="watchlist-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>PYPL</strong> - PayPal Holdings, Inc.
-                                    </div>
-                                    <div>
-                                        <span class="negative-value mr-2">$65.40 (-1.2%)</span>
-                                        <canvas class="sparkline-container" data-values="[66.2,66,65.8,65.7,65.5,65.4]"></canvas>
-                                    </div>
-                                </div>
+                                {% empty %}
+                                <p>You have no stocks in your watchlist yet.</p>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- News Feed -->
-                <div class="col-md-6">
-                    <div class="dashboard-section" id="news-feed">
-                        <h2>Financial News</h2>
-                        <div class="card">
-                            <div class="card-body">
+                <div class="dashboard-section" id="news-feed">
+                    <h2>Financial News</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            {% for article in news_articles %}
                                 <div class="news-item">
-                                    <h6><i class="fas fa-newspaper mr-2 text-primary"></i>Federal Reserve Signals Potential Rate Cut in April</h6>
-                                    <p>The Federal Reserve Chair indicated that the central bank may consider interest rate cuts as early as April amid signs of cooling inflation.</p>
-                                    <div class="news-date">March 11, 2025 • <span class="badge badge-info">Featured</span></div>
+                                    <h6>
+                                        <i class="fas fa-newspaper mr-2 text-primary"></i>
+                                        <a href="{{ article.url }}" target="_blank">{{ article.title }}</a>
+                                    </h6>
+                                    <p>{{ article.description }}</p>
+                                    <div class="news-date">
+                                        {{ article.published_at|date:"F j, Y" }} • 
+                                        <span class="badge badge-info">{{ article.source }}</span>
+                                    </div>
                                 </div>
-                                <div class="news-item">
-                                    <h6><i class="fas fa-chart-line mr-2 text-success"></i>AAPL Unveils Next Generation iPhone</h6>
-                                    <p>Apple Inc. announced its latest iPhone model with improved AI capabilities and longer battery life, potentially bolstering its stock value.</p>
-                                    <div class="news-date">March 10, 2025</div>
-                                </div>
-                                <div class="news-item">
-                                    <h6><i class="fas fa-industry mr-2 text-secondary"></i>Supply Chain Constraints Ease for Tech Companies</h6>
-                                    <p>Recent reports indicate that global supply chain issues that have plagued tech manufacturers are showing signs of improvement.</p>
-                                    <div class="news-date">March 9, 2025</div>
-                                </div>
-                                <div class="news-item">
-                                    <h6><i class="fas fa-globe-americas mr-2 text-primary"></i>Markets React to International Trade Agreement</h6>
-                                    <p>Asian and European markets rallied following news of a major international trade agreement designed to ease tariffs.</p>
-                                    <div class="news-date">March 8, 2025</div>
-                                </div>
-                            </div>
+                            {% empty %}
+                                <p>No news available at this time.</p>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -788,154 +709,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.min.js"></script>
-    
-    <script>
-        // Theme toggle functionality
-        document.getElementById('checkbox').addEventListener('change', function() {
-            document.body.classList.toggle('dark-mode');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        });
-        
-        // Check for saved theme preference
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('checkbox').checked = true;
-        }
-        
-        // Initialize charts
-        document.addEventListener('DOMContentLoaded', function() {
-            // Portfolio Performance Chart
-            const perfCtx = document.getElementById('portfolioPerformanceChart').getContext('2d');
-            const perfChart = new Chart(perfCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
-                    datasets: [{
-                        label: 'Portfolio Value',
-                        data: [92000, 94000, 95500, 97000, 98000, 100000],
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true
-                    }, {
-                        label: 'S&P 500',
-                        data: [90000, 91500, 93000, 94500, 95000, 97000],
-                        borderColor: '#2ecc71',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        tension: 0.3,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            grid: {
-                                drawBorder: false
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    }
-                }
-            });
-            
-            // Asset Allocation Chart
-            const allocCtx = document.getElementById('assetAllocationChart').getContext('2d');
-            const allocChart = new Chart(allocCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Stocks', 'Bonds', 'Cash', 'Real Estate', 'Crypto'],
-                    datasets: [{
-                        data: [65, 15, 10, 7, 3],
-                        backgroundColor: [
-                            '#3498db',
-                            '#2ecc71',
-                            '#f1c40f',
-                            '#e74c3c',
-                            '#9b59b6'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            });
-            
-             // Sparklines for watchlist
-    document.querySelectorAll('.sparkline-container').forEach(function(canvas) {
-        const values = JSON.parse(canvas.dataset.values);
-        const ctx = canvas.getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array(values.length).fill(''),
-                datasets: [{
-                    data: values,
-                    borderColor: values[0] < values[values.length-1] ? '#2ecc71' : '#e74c3c',
-                    backgroundColor: 'transparent',
-                    borderWidth: 1.5,
-                    pointRadius: 0,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: false
-                    }
-                },
-                scales: {
-                    x: {
-                        display: false,
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        display: false,
-                        grid: {
-                            display: false
-                        },
-                        min: Math.min(...values) * 0.99,
-                        max: Math.max(...values) * 1.01
-                    }
-                },
-                elements: {
-                    line: {
-                        borderWidth: 1.5
-                    },
-                    point: {
-                        radius: 0
-                    }
-                },
-                animation: false
-            }
-        });
-    });
-</script>
+
 </body>
 </html>

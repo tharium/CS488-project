@@ -1,0 +1,13 @@
+{% if searched_stock %}
+    {% if not in_watchlist %}
+        <h3>Found: {{ searched_stock.ticker }} - {{ searched_stock.company_name }}</h3>
+        <form action="{% url 'add_stock' searched_stock.ticker %}" method="post" class="add-stock-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm">Add to Watchlist</button>
+        </form>
+    {% else %}
+        <h3>{{ searched_stock.ticker }} is already in your watchlist ✅</h3>
+    {% endif %}
+{% elif search_query %}
+    <p>No stock found for "{{ search_query }}"</p>
+{% endif %}

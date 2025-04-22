@@ -9,7 +9,8 @@ from .models import Watchlist, Stock, Profile
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
-from django.core.signing import Signer, BadSignature, TimestampSigner
+from django.core.signing import BadSignature, TimestampSigner
+from .utils.news import get_stock_news
 import secrets
 import yfinance as yf
 
@@ -150,59 +151,119 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
-# Dashboard View (Requires Login = locked)
+@login_required
 def dashboard(request):
-    if request.user.is_authenticated:
-        return render(request, "dashboard.html")
-    else:
-        messages.error(request, "You must be logged in to access the dashboard.")
-        return redirect("login")
+    watchlist, _ = Watchlist.objects.get_or_create(user=request.user)
+    user_stocks = watchlist.stocks.all()
+    # update stock prices
+    for stock in user_stocks:
+        price_data = get_stock_price(stock.ticker)
+        stock.current_price = price_data["price"]
+        stock.volume = price_data["volume"]
+        stock.high_price = price_data["high"]
+        stock.low_price = price_data["low"]
+        stock.save()
 
-def get_stock_price(request):
-    """Handles API requests for fetching stock prices"""
-    symbol = request.GET.get('symbol', '').upper().strip()  # Get stock symbol
+    all_news = []
+    for stock in user_stocks:
+        news_articles = get_stock_news(stock.ticker, limit=1)  # get 1 article per stock
+        for article in news_articles:
+            all_news.append({
+                "title": article["title"],
+                "description": article["description"],
+                "url": article["url"],
+                "published_at": article["publishedAt"],
+                "source": article["source"]["name"],
+            })
 
+    # Optionally sort by published date
+    all_news.sort(key=lambda x: x["published_at"], reverse=True)
+
+    context = {
+        "stocks": user_stocks,
+        "news_articles": all_news[:5],  # limit total on dashboard to top 5
+    }
+            
+    return render(request, "dashboard.html", context)
+
+@login_required
+def search_stock(request):
+    print("search_stock view called")
+    query = request.GET.get('q', '').strip()
+    searched_stock = None
+    in_watchlist = False
+
+    if query:
+        try:
+            searched_stock = Stock.objects.get(
+                Q(ticker__iexact=query) | Q(company_name__icontains=query)
+            )
+            watchlist = Watchlist.objects.get(user=request.user)
+            in_watchlist = searched_stock in watchlist.stocks.all()
+        except Stock.DoesNotExist:
+            searched_stock = None
+
+    context = {
+        'search_query': query,
+        'searched_stock': searched_stock,
+        'in_watchlist': in_watchlist,
+    }
+
+    return render(request, 'partials/search_result.html', context)
+
+def get_stock_price(symbol):
+    """returns stock price data as a dict"""
     if not symbol:
-        return JsonResponse({"error": "No stock symbol provided"}, status=400)
+        return {"error": "No stock symbol provided"}
 
-    try:
-        stock = yf.Ticker(symbol)  # Fetch stock data from Yahoo Finance
-        stock_info = stock.history(period="1d")  # Get the latest price
-
-        if stock_info.empty:
-            return JsonResponse({"error": "Invalid stock symbol"}, status=400)
-
-        latest_price = stock_info['Close'].iloc[-1]  # Get the most recent closing price
-        return JsonResponse({"symbol": symbol, "price": round(latest_price, 2)})  # Return JSON response
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-def get_stock_history(request):
-    symbol = request.GET.get('symbol', '')
-    period = request.GET.get('period', '')
-
-    print(str(symbol) + " " + str(period))
     try:
         stock = yf.Ticker(symbol)
-        stock_info = stock.history(period=period)
-
+        stock_info = stock.history(period="1d")
         print(str(stock_info))
-        if stock_info.empty:
-            
-            return JsonResponse({"error": "Invalid stock symbol"}, status=400)
 
-        history_data = {
-            "dates": stock_info.index.strftime('%Y-%m-%d').tolist(),
-            "prices": stock_info['Close'].tolist()
+        if stock_info.empty:
+            return {"error": "Invalid stock symbol"}
+
+        latest_price = stock_info['Close'].iloc[-1]
+        high = stock_info['High'].iloc[-1]
+        low = stock_info['Low'].iloc[-1]
+        volume = stock_info['Volume'].iloc[-1]
+        return {
+            "symbol": symbol,
+            "price": round(latest_price, 2),
+            "high": round(high, 2),
+            "low": round(low, 2),
+            "volume": volume
         }
 
-        print(str(history_data))
-        return JsonResponse(history_data)
-
     except Exception as e:
+        return {"error": str(e)}
+
+# def get_stock_history(request):
+#     symbol = request.GET.get('symbol', '')
+#     period = request.GET.get('period', '')
+
+#     print(str(symbol) + " " + str(period))
+#     try:
+#         stock = yf.Ticker(symbol)
+#         stock_info = stock.history(period=period)
+
+#         print(str(stock_info))
+#         if stock_info.empty:
+            
+#             return JsonResponse({"error": "Invalid stock symbol"}, status=400)
+
+#         history_data = {
+#             "dates": stock_info.index.strftime('%Y-%m-%d').tolist(),
+#             "prices": stock_info['Close'].tolist()
+#         }
+
+#         print(str(history_data))
+#         return JsonResponse(history_data)
+
+#     except Exception as e:
         
-        return JsonResponse({"error": str(e)}, status=500)
+#         return JsonResponse({"error": str(e)}, status=500)
 def index(request):
     return render(request, 'index.html')
 
@@ -220,7 +281,7 @@ def add_stock(request, stock_ticker):
             watchlist.save()
             messages.success(request, f"Added {stock.ticker} to your watchlist!")
 
-        return redirect('view_watchlist')
+        return redirect('dashboard')
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
@@ -260,7 +321,7 @@ def view_watchlist(request):
 
     return render(
         request,
-        'watchlist.html',
+        'dashboard.html',
         {
             'stocks': stocks_in_watchlist,
             'search_query': search_query,
