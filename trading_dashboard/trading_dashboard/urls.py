@@ -30,6 +30,7 @@ urlpatterns = [
 
     # Fix: Correct API route for fetching stock prices
     path('api/stock/', views.get_stock_price, name='get_stock_price'),
+    path('api/stock/history/', views.get_stock_history, name='get_stock_history'),
 
     # Fix: Correct API route for fetching stock history
     path('api/stock/history/', views.get_stock_history, name='get_stock_history'),
@@ -37,6 +38,7 @@ urlpatterns = [
     # User Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('register/', views.register_view, name='register'),
 
     # Secure Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
@@ -56,4 +58,8 @@ urlpatterns = [
     path('highprice/add/<str:stock_ticker>/<str:amount>/', views.add_high_price, name='add_high_price'),
     
     path('lowprice/add/<str:stock_ticker>/<str:amount>/', views.add_low_price, name='add_low_price'),
+
+    path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
+
+    path("search-stock/", views.search_stock, name="search_stock"),
 ]

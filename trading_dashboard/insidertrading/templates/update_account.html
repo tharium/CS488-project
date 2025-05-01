@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Account Information</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- Include Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 550px;
+            margin: 50px auto;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.05);
+        }
+        .form-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+        .form-control {
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            transition: border-color 0.2s ease;
+        }
+        .form-control:focus {
+            border-color: #4285f4;
+            box-shadow: 0 0 0 0.2rem rgba(66, 133, 244, 0.15);
+        }
+        .password-field {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        .btn-save {
+            background-color: #4285f4;
+            border-color: #4285f4;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-save:hover {
+            background-color: #3367d6;
+            border-color: #3367d6;
+        }
+        .btn-cancel {
+            padding: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            background-color: #f2f2f2;
+            border-color: #f2f2f2;
+            color: #5f6368;
+        }
+        .btn-cancel:hover {
+            background-color: #e6e6e6;
+            border-color: #e6e6e6;
+            color: #202124;
+        }
+        .form-actions {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-header">
+            <h2 class="text-center">Update Your Account</h2>
+            <p class="text-center text-muted">Make changes to your profile information below</p>
+        </div>
+        
+        <form id="updateAccountForm">
+            <div class="form-group">
+                <label for="username" class="form-label">New Username</label>
+                <input type="text" id="username" class="form-control" placeholder="Enter new username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email" class="form-label">New Email</label>
+                <input type="email" id="email" class="form-control" placeholder="Enter new email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">New Password</label>
+                <div class="password-field">
+                    <input type="password" id="password" class="form-control" placeholder="Enter new password" required>
+                    <i class="password-toggle fas fa-eye" id="togglePassword"></i>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                <div class="password-field">
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password" required>
+                    <i class="password-toggle fas fa-eye" id="toggleConfirmPassword"></i>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-save btn-block mb-3" id="saveBtn">Save Changes</button>
+                <a href="/dashboard/" class="btn btn-cancel btn-block">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

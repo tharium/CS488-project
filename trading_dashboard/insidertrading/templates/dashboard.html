@@ -1,0 +1,714 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Investor Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Chart.js for charts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="{% static 'js/dashboard_script.js' %}"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-bg: #222;
+            --dark-card: #333;
+            --dark-text: #eee;
+        }
+
+        body {
+            transition: background-color 0.3s, color 0.3s;
+            padding-bottom: 2rem;
+        }
+
+        .dark-mode {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        .dark-mode .card {
+            background-color: var(--dark-card);
+            color: var(--dark-text);
+        }
+
+        .dark-mode .navbar {
+            background-color: #1a1a1a !important;
+        }
+
+        .dark-mode .table {
+            color: var(--dark-text);
+        }
+
+        .dashboard-section {
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-section h2 {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .settings-icon {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .dropdown-menu a {
+            color: black;
+        }
+
+        .dropdown-menu a.delete-account {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 60px;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link {
+            color: #fff;
+            border-radius: 0;
+            padding: 15px 20px;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .main-content {
+            transition: margin-left 0.3s;
+        }
+
+        /* Cards */
+        .card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .positive-value {
+            color: var(--success-color);
+        }
+
+        .negative-value {
+            color: var(--danger-color);
+        }
+
+        /* Watchlist */
+        .watchlist-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .watchlist-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .watchlist-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Quick Actions */
+        .quick-action-btn {
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar .nav-link span {
+                display: none;
+            }
+            
+            .sidebar .nav-link i {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+
+        /* Toggle Switch */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 24px;
+            position: relative;
+            width: 48px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            background-color: white;
+            bottom: 4px;
+            content: "";
+            height: 16px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 16px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--secondary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        /* News Feed */
+        .news-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .news-item:last-child {
+            border-bottom: none;
+        }
+
+        .news-item .news-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .sparkline-container {
+            height: 30px;
+            width: 100px;
+        }
+
+        /* Notifications */
+        .notification-dot {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            background-color: var(--danger-color);
+            border-radius: 50%;
+        }
+
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background-color: rgba(52, 152, 219, 0.1);
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
+        .notification-item.unread {
+            background-color: rgba(52, 152, 219, 0.2);
+            font-weight: bold;
+        }
+
+        /* Modal Styling */
+        .modal-footer .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-chart-line mr-2"></i>Investor Dashboard
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <div class="theme-switch-wrapper nav-link">
+                        <label class="theme-switch" for="checkbox">
+                            <input type="checkbox" id="checkbox" />
+                            <div class="slider"></div>
+                        </label>
+                        <span class="ml-2 text-light"><i class="fas fa-moon"></i></span>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationsDropdown" role="button" data-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-dot"></span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="notificationsDropdown">
+                        <div class="dropdown-item notification-item unread">
+                            <strong>Alert:</strong> AAPL exceeded your target price of $180
+                            <div class="small text-muted">5 minutes ago</div>
+                        </div>
+                        <div class="dropdown-item notification-item">
+                            <strong>Market Alert:</strong> S&P 500 up by 2.1%
+                            <div class="small text-muted">1 hour ago</div>
+                        </div>
+                        <div class="dropdown-item notification-item">
+                            <strong>System:</strong> Portfolio rebalancing complete
+                            <div class="small text-muted">Yesterday</div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-center" href="#">View all notifications</a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="settingsDropdown" role="button" data-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="settingsDropdown">
+                        <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Profile</a>
+                        <a class="dropdown-item" href="#"><i class="fas fa-cog mr-2"></i>Settings</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item delete-account" href="#" data-toggle="modal" data-target="#deleteAccountModal">
+                            <i class="fas fa-trash-alt mr-2"></i>Delete Account
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar bg-dark text-light" style="width:200px;">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#portfolio-overview">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#portfolio-breakdown">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Portfolio</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#watchlist">
+                    <i class="fas fa-eye"></i>
+                    <span>Watchlist</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#news-feed">
+                    <i class="fas fa-newspaper"></i>
+                    <span>News</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" style="margin-left:200px;">
+        <div class="container-fluid mt-5 pt-3">
+            <!-- Portfolio Overview -->
+            <div class="dashboard-section" id="portfolio-overview">
+                <h2>Portfolio Overview</h2>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Portfolio Value</h5>
+                                <h2 class="card-text">$100,000</h2>
+                                <p class="card-text positive-value">
+                                    <i class="fas fa-arrow-up"></i> $5,200 (5.2%)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Performance Summary</h5>
+                                <p class="card-text positive-value">
+                                    <i class="fas fa-arrow-up"></i> 5% Today
+                                </p>
+                                <p class="card-text positive-value">
+                                    <i class="fas fa-arrow-up"></i> 12% This Month
+                                </p>
+                                <p class="card-text positive-value">
+                                    <i class="fas fa-arrow-up"></i> 28% YTD
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Net Profit/Loss</h5>
+                                <h2 class="card-text positive-value">$8,000 Gain</h2>
+                                <small class="text-muted">Since inception (Jan 2025)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart Section -->
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Portfolio Performance</h5>
+                                <canvas id="portfolioPerformanceChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Quick Actions</h5>
+                                <button class="btn btn-primary btn-block quick-action-btn">
+                                    <i class="fas fa-plus-circle mr-2"></i>Buy/Sell
+                                </button>
+                                <button class="btn btn-secondary btn-block quick-action-btn">
+                                    <i class="fas fa-sync mr-2"></i>Rebalance Portfolio
+                                </button>
+                                <button class="btn btn-info btn-block quick-action-btn">
+                                    <i class="fas fa-download mr-2"></i>Download Report
+                                </button>
+                                <button class="btn btn-outline-primary btn-block quick-action-btn">
+                                    <i class="fas fa-cog mr-2"></i>Portfolio Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Portfolio Breakdown -->
+            <div class="dashboard-section" id="portfolio-breakdown">
+                <h2>Portfolio Breakdown</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Asset Allocation</h5>
+                                <canvas id="assetAllocationChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Top Holdings</h5>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Symbol</th>
+                                                <th>Name</th>
+                                                <th>Shares</th>
+                                                <th>Price</th>
+                                                <th>Change</th>
+                                                <th>Value</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>AAPL</td>
+                                                <td>Apple Inc.</td>
+                                                <td>50</td>
+                                                <td>$182.50</td>
+                                                <td class="positive-value">+2.3%</td>
+                                                <td>$9,125</td>
+                                            </tr>
+                                            <tr>
+                                                <td>MSFT</td>
+                                                <td>Microsoft</td>
+                                                <td>30</td>
+                                                <td>$320.75</td>
+                                                <td class="positive-value">+1.5%</td>
+                                                <td>$9,622.50</td>
+                                            </tr>
+                                            <tr>
+                                                <td>AMZN</td>
+                                                <td>Amazon</td>
+                                                <td>10</td>
+                                                <td>$168.40</td>
+                                                <td class="negative-value">-0.8%</td>
+                                                <td>$1,684</td>
+                                            </tr>
+                                            <tr>
+                                                <td>GOOGL</td>
+                                                <td>Alphabet</td>
+                                                <td>15</td>
+                                                <td>$145.60</td>
+                                                <td class="positive-value">+0.9%</td>
+                                                <td>$2,184</td>
+                                            </tr>
+                                            <tr>
+                                                <td>TSLA</td>
+                                                <td>Tesla Inc.</td>
+                                                <td>20</td>
+                                                <td>$220.30</td>
+                                                <td class="positive-value">+3.2%</td>
+                                                <td>$4,406</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-section" id="transactions">
+                <h2>Search</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="search-form">
+                            <input type="text" name="q" placeholder="Search stocks..." value="">
+                            <button type="submit">Search</button>
+                        </form>
+                        <div id="search-result-container"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Watch List & News Feed Row -->
+            <div class="row">
+                <!-- Watchlist -->
+                <div class="col-md-6">
+                    <div class="dashboard-section" id="watchlist">
+                        <h2>Watchlist</h2>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <h5 class="card-title">Stocks I'm Watching</h5>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-plus"></i> Add
+                                    </button>
+                                </div>
+
+                                {% for stock in stocks %}
+                                <div class="watchlist-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ stock.ticker }}</strong> - {{ stock.company_name }}
+                                    
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-2">
+                                            Current: ${{ stock.current_price }} 
+                                        </span>
+                                       
+                                        <span class="mr-2">
+                                            High: ${{ stock.high_price }}
+                                        </span>
+
+                                        <span class="mr-2">
+                                            Low: ${{ stock.low_price }}
+                                        </span>
+
+                                        <span class="mr-2">
+                                            Volume: {{ stock.volume }}
+                                        </span>
+                                    
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p>You have no stocks in your watchlist yet.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- News Feed -->
+                <div class="dashboard-section" id="news-feed">
+                    <h2>Financial News</h2>
+                    <div class="card">
+                        <div class="card-body">
+                            {% for article in news_articles %}
+                                <div class="news-item">
+                                    <h6>
+                                        <i class="fas fa-newspaper mr-2 text-primary"></i>
+                                        <a href="{{ article.url }}" target="_blank">{{ article.title }}</a>
+                                    </h6>
+                                    <p>{{ article.description }}</p>
+                                    <div class="news-date">
+                                        {{ article.published_at|date:"F j, Y" }} • 
+                                        <span class="badge badge-info">{{ article.source }}</span>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <p>No news available at this time.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alerts & Notifications -->
+            <div class="dashboard-section" id="alerts">
+                <h2>Alerts & Notifications</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5 class="card-title">Current Alerts</h5>
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus"></i> Create Alert
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Type</th>
+                                        <th>Condition</th>
+                                        <th>Target</th>
+                                        <th>Current</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>AAPL</td>
+                                        <td>Price Target</td>
+                                        <td>Above</td>
+                                        <td>$180.00</td>
+                                        <td>$182.50</td>
+                                        <td><span class="badge badge-success">Triggered</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-secondary">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>TSLA</td>
+                                        <td>Price Target</td>
+                                        <td>Below</td>
+                                        <td>$200.00</td>
+                                        <td>$220.30</td>
+                                        <td><span class="badge badge-secondary">Pending</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-secondary">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>SPY</td>
+                                        <td>% Change</td>
+                                        <td>Below</td>
+                                        <td>-2%</td>
+                                        <td>+0.8%</td>
+                                        <td><span class="badge badge-secondary">Pending</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-secondary">Edit</button>
+                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" role="dialog" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAccountModalLabel">Confirm Account Deletion</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                    <div class="form-group">
+                        <label for="confirmPassword">Please enter your password to confirm:</label>
+                        <input type="password" class="form-control" id="confirmPassword">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap and jQuery Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.min.js"></script>
+
+</body>
+</html>
