@@ -16,7 +16,6 @@ class Command(BaseCommand):
                 stock = yf.Ticker(ticker)
                 name = stock.info.get("longName", "Unknown Company")  # Get company name
 
-                # Create or update stock in database
                 obj, created = Stock.objects.update_or_create(
                     ticker=ticker,
                     defaults={"company_name": name}

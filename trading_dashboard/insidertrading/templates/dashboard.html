@@ -317,6 +317,7 @@
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="settingsDropdown">
                         <a class="dropdown-item" href="#"><i class="fas fa-user mr-2"></i>Profile</a>
                         <a class="dropdown-item" href="#"><i class="fas fa-cog mr-2"></i>Settings</a>
+                        <a class="dropdown-item" href="/update_account/"><i class="fas fa-edit mr-2"></i>Update Account</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item delete-account" href="#" data-toggle="modal" data-target="#deleteAccountModal">
                             <i class="fas fa-trash-alt mr-2"></i>Delete Account
@@ -552,34 +553,34 @@
                                     </button>
                                 </div>
 
-                                {% for stock in stocks %}
-                                <div class="watchlist-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ stock.ticker }}</strong> - {{ stock.company_name }}
-                                    
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <span class="mr-2">
-                                            Current: ${{ stock.current_price }} 
-                                        </span>
-                                       
-                                        <span class="mr-2">
-                                            High: ${{ stock.high_price }}
-                                        </span>
-
-                                        <span class="mr-2">
-                                            Low: ${{ stock.low_price }}
-                                        </span>
-
-                                        <span class="mr-2">
-                                            Volume: {{ stock.volume }}
-                                        </span>
-                                    
-                                    </div>
-                                </div>
-                                {% empty %}
-                                <p>You have no stocks in your watchlist yet.</p>
-                                {% endfor %}
+                                {% if watched_stocks %}
+                                <table class="table-responsive">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 20%;">Stock</th>
+                                            <th style="width: 13%;">Current</th>
+                                            <th style="width: 13%;">High</th>
+                                            <th style="width: 13%;">Low</th>
+                                            <th style="width: 13%;">Volume</th>
+                                            <!-- <th style="width: 13%;">Trigger</th> -->
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for watched in watched_stocks %}
+                                        <tr>
+                                            <td><strong>{{ watched.stock.ticker }}</strong> - {{ watched.stock.company_name }}</td>
+                                            <td>${{ watched.stock.current_price }}</td>
+                                            <td>${{ watched.stock.high_price }}</td>
+                                            <td>${{ watched.stock.low_price }}</td>
+                                            <td>{{ watched.stock.volume }}</td>
+                                            <!-- <td>${{ watched.price_trigger }}</td> -->
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                    <p>You have no stocks in your watchlist yet.</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -617,17 +618,17 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-3">
                             <h5 class="card-title">Current Alerts</h5>
-                            <button class="btn btn-sm btn-outline-primary">
+                            <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#createAlertModal">
                                 <i class="fas fa-plus"></i> Create Alert
                             </button>
                         </div>
+                        {% if watched_stocks %}
                         <div class="table-responsive">
                             <table class="table">
                                 <thead>
                                     <tr>
                                         <th>Symbol</th>
                                         <th>Type</th>
-                                        <th>Condition</th>
                                         <th>Target</th>
                                         <th>Current</th>
                                         <th>Status</th>
@@ -635,19 +636,36 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for watched in watched_stocks %}
                                     <tr>
-                                        <td>AAPL</td>
-                                        <td>Price Target</td>
-                                        <td>Above</td>
-                                        <td>$180.00</td>
-                                        <td>$182.50</td>
-                                        <td><span class="badge badge-success">Triggered</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-secondary">Edit</button>
-                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                        </td>
+                                        {% if watched.price_trigger %}
+                                            <td><strong>{{ watched.stock.ticker }}</strong></td>
+                                            <td>Price Target</td>
+                                            <td>${{ watched.price_trigger }}</td>
+                                            <td>${{ watched.stock.current_price }}</td>
+                                            <td>
+                                                {% if watched.price_trigger < watched.stock.current_price %}
+                                                    <span class="badge badge-success">Triggered</span>
+                                                {% else %}
+                                                    <span class="badge badge-secondary">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <!-- Edit Button -->
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#editModal{{ watched.stock.ticker }}">
+                                                    Edit
+                                                </button>
+
+                                                <!-- Delete Button -->
+                                                <form method="POST" action="{% url 'delete_trigger' watched.stock.ticker %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                </form>
+                                            </td>
+                                        {% endif %}
                                     </tr>
-                                    <tr>
+                                    {% endfor %}
+                                    <!-- <tr>
                                         <td>TSLA</td>
                                         <td>Price Target</td>
                                         <td>Below</td>
@@ -658,22 +676,13 @@
                                             <button class="btn btn-sm btn-outline-secondary">Edit</button>
                                             <button class="btn btn-sm btn-outline-danger">Delete</button>
                                         </td>
-                                    </tr>
-                                    <tr>
-                                        <td>SPY</td>
-                                        <td>% Change</td>
-                                        <td>Below</td>
-                                        <td>-2%</td>
-                                        <td>+0.8%</td>
-                                        <td><span class="badge badge-secondary">Pending</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-secondary">Edit</button>
-                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
-                                        </td>
-                                    </tr>
+                                    </tr> -->
                                 </tbody>
                             </table>
                         </div>
+                        {% else %}
+                            <p>You have no alerts set up yet.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -704,6 +713,66 @@
             </div>
         </div>
     </div>
+
+    <!-- Create Alert Modal -->
+    <div class="modal fade" id="createAlertModal" tabindex="-1" role="dialog" aria-labelledby="createAlertModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <form method="POST" action="{% url 'add_trigger' %}">
+        {% csrf_token %}
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="createAlertModalLabel">Create New Price Alert</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+            <div class="form-group">
+                <label for="ticker">Ticker</label>
+                <input type="text" name="ticker" class="form-control" id="ticker" required>
+            </div>
+            <div class="form-group">
+                <label for="trigger_price">Target Price</label>
+                <input type="number" step="0.01" name="trigger_price" class="form-control" id="trigger_price" required>
+            </div>
+            </div>
+            <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Create Alert</button>
+            </div>
+        </div>
+        </form>
+    </div>
+    </div>
+
+    <!-- Edit alert modal -->
+    {% for watched in watched_stocks %}
+        {% if watched.price_trigger %}
+            <div class="modal fade" id="editModal{{ watched.stock.ticker }}" tabindex="-1" role="dialog" aria-labelledby="editModalLabel{{ watched.stock.ticker }}" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <form method="POST" action="{% url 'edit_trigger' watched.stock.ticker %}">
+                        {% csrf_token %}
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editModalLabel{{ watched.stock.ticker }}">
+                                    Edit Trigger for {{ watched.stock.ticker }}
+                                </h5>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="trigger_price_{{ watched.stock.ticker }}">New Target Price</label>
+                                <input type="number" step="0.01" name="trigger_price" id="trigger_price_{{ watched.stock.ticker }}"
+                                    class="form-control" value="{{ watched.price_trigger }}">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
     
     <!-- Bootstrap and jQuery Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

@@ -40,7 +40,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
 
-    # Secure Dashboard
+    # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
 
     # Include additional routes from the 'insidertrading' app
@@ -55,11 +55,15 @@ urlpatterns = [
 
     path('watchlist/remove/<str:stock_ticker>/', views.remove_stock, name='remove_stock'),
 
-    path('highprice/add/<str:stock_ticker>/<str:amount>/', views.add_high_price, name='add_high_price'),
-    
-    path('lowprice/add/<str:stock_ticker>/<str:amount>/', views.add_low_price, name='add_low_price'),
+    path('edit_trigger/<str:ticker>/', views.edit_trigger, name='edit_trigger'),
+
+    path('delete_trigger/<str:ticker>/', views.delete_trigger, name='delete_trigger'),
+
+    path('add_trigger/', views.add_trigger, name='add_trigger'),
 
     path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
 
     path("search-stock/", views.search_stock, name="search_stock"),
+
+    path('update_account/', views.update_account, name='update_account'),
 ]

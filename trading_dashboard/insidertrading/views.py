@@ -5,12 +5,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Watchlist, Stock, Profile
+from .models import Watchlist, Stock, Profile, WatchedStock, newsArticle
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.views.decorators.http import require_POST
 from django.core.signing import BadSignature, TimestampSigner
 from .utils.news import get_stock_news
+from django.http import JsonResponse
 import secrets
 import yfinance as yf
 
@@ -126,7 +128,6 @@ def get_stock_history(request):
 
 # Login View
 def login_view(request):
-    print("Login view called")
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -152,36 +153,79 @@ def logout_view(request):
     return redirect("login")
 
 @login_required
+def update_account(request):
+    print("update_account view called")
+    if request.method == "POST":
+
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password1 = request.POST.get("password")
+        password2 = request.POST.get("confirmPassword")
+        notification_frequency = request.POST.get("notification_frequency")
+
+        print(f"username: {username}, email: {email}, password1: {password1}, password2: {password2}, notification_frequency: {notification_frequency}")
+
+        user = request.user
+
+        if password1 or password2:
+            if password1 != password2:
+                return render(request, "update_account.html", {"error": "Passwords do not match."})
+
+        # Check if username/email is taken (if provided)
+        if username and User.objects.filter(username=username).exclude(id=user.id).exists():
+            return render(request, "update_account.html", {"error": "Username already taken."})
+
+        if email and User.objects.filter(email=email).exclude(id=user.id).exists():
+            return render(request, "update_account.html", {"error": "Email already in use."})
+
+        # Update user details
+        if username:
+            user.username = username
+        if email:
+            user.email = email
+        if password1:
+            user.set_password(password1)
+        if notification_frequency:
+            profile = user.profile  # assuming a OneToOneField from User to Profile
+            profile.notification_frequency = notification_frequency
+            profile.save()
+
+        user.save()
+
+    return render(request, "update_account.html")
+
+@login_required
 def dashboard(request):
     watchlist, _ = Watchlist.objects.get_or_create(user=request.user)
-    user_stocks = watchlist.stocks.all()
+    #user_stocks = watchlist.stocks.all()
+    watched_stocks = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')
     # update stock prices
-    for stock in user_stocks:
-        price_data = get_stock_price(stock.ticker)
-        stock.current_price = price_data["price"]
-        stock.volume = price_data["volume"]
-        stock.high_price = price_data["high"]
-        stock.low_price = price_data["low"]
-        stock.save()
+    for watched in watched_stocks:
+        price_data = get_stock_price(watched.stock.ticker)
+
+        if "error" in price_data:
+            print(f"Error fetching data for {watched.stock.ticker}: {price_data['error']}")
+            continue
+
+        watched.stock.current_price = price_data["price"]
+        watched.stock.volume = price_data["volume"]
+        watched.stock.high_price = price_data["high"]
+        watched.stock.low_price = price_data["low"]
+        watched.stock.save()
+
+    profile = getattr(request.user, 'profile', None)
+    blocked = profile.blocked_sources if profile else []
 
     all_news = []
-    for stock in user_stocks:
-        news_articles = get_stock_news(stock.ticker, limit=1)  # get 1 article per stock
-        for article in news_articles:
-            all_news.append({
-                "title": article["title"],
-                "description": article["description"],
-                "url": article["url"],
-                "published_at": article["publishedAt"],
-                "source": article["source"]["name"],
-            })
-
-    # Optionally sort by published date
-    all_news.sort(key=lambda x: x["published_at"], reverse=True)
+    for watched in watched_stocks:
+        stock_news = newsArticle.objects.filter(
+            symbol=watched.stock.ticker
+        ).exclude(source__in=blocked).order_by('-published_at')[:1]
+        all_news.extend(stock_news)
 
     context = {
-        "stocks": user_stocks,
-        "news_articles": all_news[:5],  # limit total on dashboard to top 5
+        "watched_stocks": watched_stocks,
+        "news_articles": all_news[:5],  # Limit total to top 5 articles
     }
             
     return render(request, "dashboard.html", context)
@@ -271,14 +315,13 @@ def index(request):
 def add_stock(request, stock_ticker):
     if request.method == "POST":
         watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+
         stock = get_object_or_404(Stock, ticker=stock_ticker)
 
-        if stock in watchlist.stocks.all():
-        
+        if WatchedStock.objects.filter(watchlist=watchlist, stock=stock).exists():
             messages.error(request, "Stock is already in your watchlist.")
         else:
-            watchlist.stocks.add(stock)
-            watchlist.save()
+            WatchedStock.objects.create(watchlist=watchlist, stock=stock)
             messages.success(request, f"Added {stock.ticker} to your watchlist!")
 
         return redirect('dashboard')
@@ -289,17 +332,18 @@ def add_stock(request, stock_ticker):
 def remove_stock(request, stock_ticker):
     if request.method == "POST":
         watchlist = Watchlist.objects.get(user=request.user)
+
         stock = get_object_or_404(Stock, ticker=stock_ticker)
 
-        if stock in watchlist.stocks.all():
-            watchlist.stocks.remove(stock)
-            watchlist.save()
+        watched_stock = WatchedStock.objects.filter(watchlist=watchlist, stock=stock).first()
+
+        if watched_stock:
+            watched_stock.delete()
             messages.success(request, f"Removed {stock.ticker} from your watchlist!")
         else:
             messages.error(request, "Stock not found in your watchlist.")
 
-        # Redirect back to the watchlist page
-        return redirect('view_watchlist')
+        return redirect('dashboard')
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
@@ -329,37 +373,124 @@ def view_watchlist(request):
         },
     )
 
+# @login_required
+# def add_low_price(request, stock_ticker, amount):
+#     if request.method == "POST":
+#         watchlist = Watchlist.objects.get(user=request.user)
+#         stock = get_object_or_404(Stock, ticker=stock_ticker)
+
+#         if amount:
+#             watchlist.low_price = amount
+#             watchlist.save()
+#             messages.success(request, f"Set low price for {stock.ticker} to {amount}!")
+#         else:
+#             messages.error(request, "Invalid low price.")
+
+#         return JsonResponse({"success": True})
+
+#     return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+# @login_required
+# def add_high_price(request, stock_ticker, amount):
+#     if request.method == "POST":
+#         watchlist = Watchlist.objects.get(user=request.user)
+#         stock = get_object_or_404(Stock, ticker=stock_ticker)
+
+#         if amount:
+#             watchlist.high_price = amount
+#             watchlist.save()
+#             messages.success(request, f"Set high price for {stock.ticker} to {amount}!")
+#         else:
+#             messages.error(request, "Invalid high price.")
+
+#         return JsonResponse({"success": True})
+
+#     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 @login_required
-def add_low_price(request, stock_ticker, amount):
+def add_price_trigger(request, stock_ticker, amount):
     if request.method == "POST":
         watchlist = Watchlist.objects.get(user=request.user)
         stock = get_object_or_404(Stock, ticker=stock_ticker)
 
+        watched_stock, created = WatchedStock.objects.get_or_create(
+            watchlist=watchlist,
+            stock=stock,
+        )
+
         if amount:
-            watchlist.low_price = amount
-            watchlist.save()
-            messages.success(request, f"Set low price for {stock.ticker} to {amount}!")
+            watched_stock.price_trigger = amount
+            watched_stock.save()
+            messages.success(request, f"Set price trigger for {stock.ticker} to {amount}!")
         else:
-            messages.error(request, "Invalid low price.")
+            messages.error(request, "Invalid price trigger.")
 
         return JsonResponse({"success": True})
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
+@require_POST
+def edit_trigger(request, ticker):
+    watchlist = get_object_or_404(Watchlist, user=request.user)
+    stock = get_object_or_404(Stock, ticker=ticker.upper())
+    watched = get_object_or_404(WatchedStock, watchlist=watchlist, stock=stock)
 
-@login_required
-def add_high_price(request, stock_ticker, amount):
-    if request.method == "POST":
-        watchlist = Watchlist.objects.get(user=request.user)
-        stock = get_object_or_404(Stock, ticker=stock_ticker)
+    try:
+        new_price = float(request.POST.get('trigger_price'))
+        watched.price_trigger = new_price
+        watched.save()
+        messages.success(request, f"Price trigger for {stock.ticker} updated to ${new_price:.2f}.")
+    except (TypeError, ValueError):
+        messages.error(request, "Invalid price entered.")
 
-        if amount:
-            watchlist.high_price = amount
-            watchlist.save()
-            messages.success(request, f"Set high price for {stock.ticker} to {amount}!")
-        else:
-            messages.error(request, "Invalid high price.")
+    return redirect('dashboard')
 
-        return JsonResponse({"success": True})
+@require_POST
+def delete_trigger(request, ticker):
+    watchlist = get_object_or_404(Watchlist, user=request.user)
+    stock = get_object_or_404(Stock, ticker=ticker.upper())
+    watched = get_object_or_404(WatchedStock, watchlist=watchlist, stock=stock)
 
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+    watched.price_trigger = None
+    watched.save()
+    messages.success(request, f"Price trigger for {stock.ticker} has been removed.")
+
+    return redirect('dashboard')
+
+@require_POST
+def add_trigger(request):
+    ticker = request.POST.get('ticker', '').upper()
+    price = request.POST.get('trigger_price')
+
+    if not ticker or not price:
+        messages.error(request, "Please provide both a ticker and a price.")
+        return redirect('dashboard')
+
+    try:
+        price = float(price)
+    except ValueError:
+        messages.error(request, "Invalid price format.")
+        return redirect('dashboard')
+
+    stock = Stock.objects.filter(ticker=ticker).first()
+    if not stock:
+        messages.error(request, f"Stock '{ticker}' not found.")
+        return redirect('dashboard')
+
+    watchlist = get_object_or_404(Watchlist, user=request.user)
+
+    watched, created = WatchedStock.objects.get_or_create(
+        watchlist=watchlist,
+        stock=stock,
+        defaults={'price_trigger': price}
+    )
+
+    if not created:
+        watched.price_trigger = price
+        watched.save()
+        messages.info(request, f"Updated existing alert for {ticker} to ${price:.2f}.")
+    else:
+        messages.success(request, f"Created new alert for {ticker} at ${price:.2f}.")
+
+    return redirect('dashboard')

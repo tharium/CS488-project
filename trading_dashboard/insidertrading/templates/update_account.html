@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <!-- Include Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="{% static 'js/update_account_script.js' %}"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -91,21 +95,22 @@
             <p class="text-center text-muted">Make changes to your profile information below</p>
         </div>
         
-        <form id="updateAccountForm">
+        <form method="POST" action="/update_account/" id="updateAccountForm">
+            {% csrf_token %}
             <div class="form-group">
                 <label for="username" class="form-label">New Username</label>
-                <input type="text" id="username" class="form-control" placeholder="Enter new username" required>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Enter new username" >
             </div>
             
             <div class="form-group">
                 <label for="email" class="form-label">New Email</label>
-                <input type="email" id="email" class="form-control" placeholder="Enter new email" required>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter new email" >
             </div>
             
             <div class="form-group">
                 <label for="password" class="form-label">New Password</label>
                 <div class="password-field">
-                    <input type="password" id="password" class="form-control" placeholder="Enter new password" required>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter new password" >
                     <i class="password-toggle fas fa-eye" id="togglePassword"></i>
                 </div>
             </div>
@@ -113,11 +118,37 @@
             <div class="form-group">
                 <label for="confirmPassword" class="form-label">Confirm Password</label>
                 <div class="password-field">
-                    <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Confirm new password">
                     <i class="password-toggle fas fa-eye" id="toggleConfirmPassword"></i>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label for="blocked_sources" class="form-label">Blocked Sources (comma-separated)</label>
+                <input type="text" name="blocked_sources" id="blocked_sources" class="form-control"
+                    value="{{ user.profile.blocked_sources|join:', ' }}">
+            </div>
+
+            <div class="form-group">
+                <fieldset>
+                    <legend>Notification Frequency</legend>
             
+                    <div>
+                        <input type="radio" name="notification_frequency" id="daily" value="daily">
+                        <label for="daily">Daily</label>
+                    </div>
+            
+                    <div>
+                        <input type="radio" name="notification_frequency" id="weekly" value="weekly">
+                        <label for="weekly">Weekly</label>
+                    </div>
+            
+                    <div>
+                        <input type="radio" name="notification_frequency" id="none" value="none">
+                        <label for="none">None</label>
+                    </div>
+                </fieldset>
+            </div>
             <div class="form-actions">
                 <button type="submit" class="btn btn-save btn-block mb-3" id="saveBtn">Save Changes</button>
                 <a href="/dashboard/" class="btn btn-cancel btn-block">Cancel</a>
