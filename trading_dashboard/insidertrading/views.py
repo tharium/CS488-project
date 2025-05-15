@@ -223,13 +223,33 @@ def dashboard(request):
         watched.stock.low_price = price_data["low"]
         watched.stock.save()
 
+    # check for price triggers, checks when dashboard is loaded (when the price is pulled from API)
+    # best choice since this runs on localhost and can not be scheduled
+    # in production, this should be run as a cron job or similar
+    if request.user.is_authenticated:
+        watchlist = getattr(request.user, 'watchlist', None)
+        if watchlist:
+            triggered = []
+            for watched in WatchedStock.objects.filter(watchlist=watchlist):
+                if watched.price_trigger and watched.stock.current_price >= watched.price_trigger:
+                    triggered.append(watched.stock.ticker)
+
+            if triggered:
+                send_mail(
+                    subject="Price Alert Triggered",
+                    message="Price thresholds reached:\n" + "\n".join(triggered),
+                    from_email="tradingdashboardbot@gmail.com",
+                    recipient_list=[request.user.email],
+                    fail_silently=True,
+                )
+
     profile = getattr(request.user, 'profile', None)
     blocked = [s.upper() for s in profile.blocked_sources] if profile else []
     print(f"Blocked sources: {blocked}")
 
     all_news = []
     for watched in watched_stocks:
-        # Build Q objects for case-insensitive exclusion
+        # case insensitive match for blocked sources
         block_q = Q()
         for source in blocked:
             block_q |= Q(source__iexact=source)
@@ -249,7 +269,6 @@ def dashboard(request):
 
 @login_required
 def search_stock(request):
-    print("search_stock view called")
     query = request.GET.get('q', '').strip()
     searched_stock = None
     in_watchlist = False
@@ -300,31 +319,6 @@ def get_stock_price(symbol):
     except Exception as e:
         return {"error": str(e)}
 
-# def get_stock_history(request):
-#     symbol = request.GET.get('symbol', '')
-#     period = request.GET.get('period', '')
-
-#     print(str(symbol) + " " + str(period))
-#     try:
-#         stock = yf.Ticker(symbol)
-#         stock_info = stock.history(period=period)
-
-#         print(str(stock_info))
-#         if stock_info.empty:
-            
-#             return JsonResponse({"error": "Invalid stock symbol"}, status=400)
-
-#         history_data = {
-#             "dates": stock_info.index.strftime('%Y-%m-%d').tolist(),
-#             "prices": stock_info['Close'].tolist()
-#         }
-
-#         print(str(history_data))
-#         return JsonResponse(history_data)
-
-#     except Exception as e:
-        
-#         return JsonResponse({"error": str(e)}, status=500)
 def index(request):
     return render(request, 'index.html')
 
