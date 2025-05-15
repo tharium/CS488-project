@@ -162,6 +162,11 @@ def update_account(request):
         password1 = request.POST.get("password")
         password2 = request.POST.get("confirmPassword")
         notification_frequency = request.POST.get("notification_frequency")
+        blocked_sources_raw = request.POST.get("blocked_sources")
+        blocked_sources = []
+
+        if blocked_sources_raw:
+            blocked_sources = [source.strip().upper() for source in blocked_sources_raw.split(",") if source.strip()]
 
         print(f"username: {username}, email: {email}, password1: {password1}, password2: {password2}, notification_frequency: {notification_frequency}")
 
@@ -189,6 +194,11 @@ def update_account(request):
             profile = user.profile  # assuming a OneToOneField from User to Profile
             profile.notification_frequency = notification_frequency
             profile.save()
+        if blocked_sources:
+            profile = user.profile
+
+            profile.blocked_sources = blocked_sources
+            profile.save()
 
         user.save()
 
@@ -198,7 +208,7 @@ def update_account(request):
 def dashboard(request):
     watchlist, _ = Watchlist.objects.get_or_create(user=request.user)
     #user_stocks = watchlist.stocks.all()
-    watched_stocks = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')
+    watched_stocks = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')    
     # update stock prices
     for watched in watched_stocks:
         price_data = get_stock_price(watched.stock.ticker)
@@ -214,20 +224,27 @@ def dashboard(request):
         watched.stock.save()
 
     profile = getattr(request.user, 'profile', None)
-    blocked = profile.blocked_sources if profile else []
+    blocked = [s.upper() for s in profile.blocked_sources] if profile else []
+    print(f"Blocked sources: {blocked}")
 
     all_news = []
     for watched in watched_stocks:
-        stock_news = newsArticle.objects.filter(
-            symbol=watched.stock.ticker
-        ).exclude(source__in=blocked).order_by('-published_at')[:1]
+        # Build Q objects for case-insensitive exclusion
+        block_q = Q()
+        for source in blocked:
+            block_q |= Q(source__iexact=source)
+
+        stock_news = newsArticle.objects.filter(symbol=watched.stock.ticker)
+        if blocked:
+            stock_news = stock_news.exclude(block_q)
+
+        stock_news = stock_news.order_by('-published_at')[:1]
         all_news.extend(stock_news)
 
     context = {
         "watched_stocks": watched_stocks,
-        "news_articles": all_news[:5],  # Limit total to top 5 articles
+        "news_articles": all_news[:5],
     }
-            
     return render(request, "dashboard.html", context)
 
 @login_required
@@ -372,41 +389,6 @@ def view_watchlist(request):
             'searched_stock': searched_stock,
         },
     )
-
-# @login_required
-# def add_low_price(request, stock_ticker, amount):
-#     if request.method == "POST":
-#         watchlist = Watchlist.objects.get(user=request.user)
-#         stock = get_object_or_404(Stock, ticker=stock_ticker)
-
-#         if amount:
-#             watchlist.low_price = amount
-#             watchlist.save()
-#             messages.success(request, f"Set low price for {stock.ticker} to {amount}!")
-#         else:
-#             messages.error(request, "Invalid low price.")
-
-#         return JsonResponse({"success": True})
-
-#     return JsonResponse({"error": "Invalid request method"}, status=405)
-
-
-# @login_required
-# def add_high_price(request, stock_ticker, amount):
-#     if request.method == "POST":
-#         watchlist = Watchlist.objects.get(user=request.user)
-#         stock = get_object_or_404(Stock, ticker=stock_ticker)
-
-#         if amount:
-#             watchlist.high_price = amount
-#             watchlist.save()
-#             messages.success(request, f"Set high price for {stock.ticker} to {amount}!")
-#         else:
-#             messages.error(request, "Invalid high price.")
-
-#         return JsonResponse({"success": True})
-
-#     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 @login_required
 def add_price_trigger(request, stock_ticker, amount):
