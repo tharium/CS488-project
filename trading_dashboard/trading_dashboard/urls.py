@@ -61,6 +61,9 @@ urlpatterns = [
 
     path('add_trigger/', views.add_trigger, name='add_trigger'),
 
+    path('add_holding/', views.add_holding, name='add_holding'),
+
+
     path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
 
     path("search-stock/", views.search_stock, name="search_stock"),

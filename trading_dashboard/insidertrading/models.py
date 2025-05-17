@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import JSONField
+from datetime import date
 
 # Create your models here.
 class Watchlist(models.Model):
@@ -11,6 +12,9 @@ class WatchedStock(models.Model):
     watchlist = models.ForeignKey(Watchlist, on_delete=models.CASCADE)
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     price_trigger = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    amount_held = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    added_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    added_at = models.DateField(default=date.today)
     # notify_on_price_cross = models.BooleanField(default=True)
 
     class Meta:

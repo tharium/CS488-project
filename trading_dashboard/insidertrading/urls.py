@@ -13,6 +13,7 @@ urlpatterns = [
     path('edit_trigger/<str:ticker>/', views.edit_trigger, name='edit_trigger'),
     path('delete_trigger/<str:ticker>/', views.delete_trigger, name='delete_trigger'),
     path('add_trigger/', views.add_trigger, name='add_trigger'),
+    path('add_holding/', views.add_holding, name='add_holding'),
     path('register/', views.register_view, name='register'),
     path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
     path('login/', views.login_view, name='login'),

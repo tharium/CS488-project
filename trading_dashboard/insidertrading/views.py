@@ -13,8 +13,10 @@ from django.views.decorators.http import require_POST
 from django.core.signing import BadSignature, TimestampSigner
 from .utils.news import get_stock_news
 from django.http import JsonResponse
+from decimal import Decimal
 import secrets
 import yfinance as yf
+import datetime
 
 import logging
 logger = logging.getLogger(__name__)
@@ -470,3 +472,29 @@ def add_trigger(request):
         messages.success(request, f"Created new alert for {ticker} at ${price:.2f}.")
 
     return redirect('dashboard')
+
+@require_POST
+def add_holding(request):
+    ticker = request.POST.get('ticker', '').upper()
+    share_count = request.POST.get('share_count')
+    
+    user = request.user
+    watchlist = get_object_or_404(Watchlist, user=user)
+    stock = get_object_or_404(Stock, ticker=ticker)
+    watched_stock, created = WatchedStock.objects.get_or_create(
+        watchlist=watchlist,
+        stock=stock
+    )
+
+    if not watched_stock:
+        add_stock(request, ticker)
+
+    watched_stock.amount_held = Decimal(share_count)
+    watched_stock.added_at = datetime.datetime.now().date()
+    watched_stock.added_price = stock.current_price
+    watched_stock.save()
+
+    messages.success(request, f"Added {share_count} shares of {ticker} to your holdings.")
+
+    return redirect('dashboard')
+
