@@ -4,14 +4,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q, F, Sum, ExpressionWrapper, DecimalField
 from .models import Watchlist, Stock, Profile, WatchedStock, newsArticle
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.views.decorators.http import require_POST
 from django.core.signing import BadSignature, TimestampSigner
-from .utils.news import get_stock_news
+from .utils.news import fetch_and_store_news
 from django.http import JsonResponse
 from decimal import Decimal
 import secrets
@@ -211,6 +211,30 @@ def dashboard(request):
     watchlist, _ = Watchlist.objects.get_or_create(user=request.user)
     #user_stocks = watchlist.stocks.all()
     watched_stocks = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')    
+    holdings = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')
+
+    # gets total for holding value (not all stocks in watchlist)
+    total_value = holdings.annotate(
+        current_value=ExpressionWrapper(
+            F('amount_held') * F('stock__current_price'),
+            output_field=DecimalField(max_digits=20, decimal_places=2)
+        )
+    ).aggregate(total=Sum('current_value'))['total'] or 0
+
+    #context for performance chart
+    labels = []
+    percent_changes = []
+    for ws in watched_stocks:
+        if ws.added_price and ws.stock.current_price:
+            change = ((float(ws.stock.current_price) - float(ws.added_price)) / float(ws.added_price)) * 100
+            labels.append(ws.stock.ticker)
+            percent_changes.append(round(change, 2))
+
+    chart_data = {
+        'labels': labels,
+        'percent_changes': percent_changes,
+    }
+
     # update stock prices
     for watched in watched_stocks:
         price_data = get_stock_price(watched.stock.ticker)
@@ -264,8 +288,11 @@ def dashboard(request):
         all_news.extend(stock_news)
 
     context = {
+        "total_value": total_value,
+        "holdings" : holdings,
         "watched_stocks": watched_stocks,
         "news_articles": all_news[:5],
+        "chart_data": chart_data,
     }
     return render(request, "dashboard.html", context)
 
@@ -325,10 +352,11 @@ def index(request):
     return render(request, 'index.html')
 
 @login_required
-def add_stock(request, stock_ticker):
+def add_stock(request):
     if request.method == "POST":
         watchlist, created = Watchlist.objects.get_or_create(user=request.user)
 
+        stock_ticker = request.POST.get('add_ticker')
         stock = get_object_or_404(Stock, ticker=stock_ticker)
 
         if WatchedStock.objects.filter(watchlist=watchlist, stock=stock).exists():
@@ -498,3 +526,42 @@ def add_holding(request):
 
     return redirect('dashboard')
 
+@require_POST
+def delete_holding(request, ticker):
+    user = request.user
+    watchlist = get_object_or_404(Watchlist, user=user)
+    stock = get_object_or_404(Stock, ticker=ticker)
+    watched_stock = get_object_or_404(WatchedStock, watchlist=watchlist, stock=stock)
+
+    watched_stock.amount_held = 0
+    watched_stock.save()
+
+    messages.success(request, f"Removed {ticker} from your holdings.")
+
+    return redirect('dashboard')
+
+
+@require_POST
+def share_watchlist(request):
+    email = request.POST.get('email')
+    if not email:
+        messages.error(request, "Please provide an email address.")
+        return redirect('dashboard')
+    
+    watchlist = get_object_or_404(Watchlist, user=request.user)
+    stocks = watchlist.stocks.all()
+    stock_list = ", ".join([stock.ticker for stock in stocks])
+    subject = f"{request.user.username}'s Watchlist"
+    message = f"Hello,\n\nHere is a watchlist shared with you by {request.user.username}:\n{stock_list}\n\nBest regards,\nTrading Dashboard Team"
+
+    send_mail(subject, message, 'tradingdashboardbot@gmail.com', [email])
+    messages.success(request, f"Watchlist shared with {email}.")
+
+    return redirect('dashboard')
+
+@require_POST
+@login_required
+def refresh_news(request):
+    fetch_and_store_news()
+    messages.success(request, "News refreshed.")
+    return redirect('dashboard')

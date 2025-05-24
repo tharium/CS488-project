@@ -15,7 +15,6 @@ class WatchedStock(models.Model):
     amount_held = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     added_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     added_at = models.DateField(default=date.today)
-    # notify_on_price_cross = models.BooleanField(default=True)
 
     class Meta:
         unique_together = ('watchlist', 'stock')

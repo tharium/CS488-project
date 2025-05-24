@@ -3,6 +3,14 @@ import yfinance as yf
 from django.core.management.base import BaseCommand
 from insidertrading.models import Stock
 
+
+'''
+This script is for fetching stock tickers from a file and saving them to the database
+Stores company name and ticker
+Only run if the database is empty
+This script is intended to be run as a Django management command.
+'''
+
 class Command(BaseCommand):
     help = "Fetch stock tickers and save them to the database"
 

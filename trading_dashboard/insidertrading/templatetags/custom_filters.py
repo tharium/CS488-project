@@ -9,3 +9,10 @@ def mul(value, arg):
         return Decimal(value) * Decimal(arg)
     except:
         return ''
+    
+@register.filter
+def sum(value, arg):
+    try:
+        return Decimal(value) + Decimal(arg)
+    except:
+        return ''

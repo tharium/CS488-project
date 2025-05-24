@@ -63,10 +63,20 @@ urlpatterns = [
 
     path('add_holding/', views.add_holding, name='add_holding'),
 
+    path('delete_holding/<str:ticker>/', views.delete_holding, name='delete_holding'),
 
     path('verify-email/<str:token>/', views.verify_email, name='verify-email'),
 
     path("search-stock/", views.search_stock, name="search_stock"),
 
+    path('remove_stock/<str:stock_ticker>/', views.remove_stock, name='remove_stock'),
+
+    path('add_stock/', views.add_stock, name='add_stock'),
+
     path('update_account/', views.update_account, name='update_account'),
+
+    path('share_watchlist/', views.share_watchlist, name='share_watchlist'),
+
+    path('refresh-news/', views.refresh_news, name='refresh_news'),
+
 ]
