@@ -12,81 +12,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script src="{% static 'js/update_account_script.js' %}"></script>
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .container {
-            max-width: 550px;
-            margin: 50px auto;
-            background: white;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.05);
-        }
-        .form-header {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-        }
-        .form-control {
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            transition: border-color 0.2s ease;
-        }
-        .form-control:focus {
-            border-color: #4285f4;
-            box-shadow: 0 0 0 0.2rem rgba(66, 133, 244, 0.15);
-        }
-        .password-field {
-            position: relative;
-        }
-        .password-toggle {
-            position: absolute;
-            right: 12px;
-            top: 12px;
-            cursor: pointer;
-            color: #6c757d;
-        }
-        .btn-save {
-            background-color: #4285f4;
-            border-color: #4285f4;
-            color: white;
-            padding: 12px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-        .btn-save:hover {
-            background-color: #3367d6;
-            border-color: #3367d6;
-        }
-        .btn-cancel {
-            padding: 12px;
-            font-weight: 600;
-            border-radius: 6px;
-            background-color: #f2f2f2;
-            border-color: #f2f2f2;
-            color: #5f6368;
-        }
-        .btn-cancel:hover {
-            background-color: #e6e6e6;
-            border-color: #e6e6e6;
-            color: #202124;
-        }
-        .form-actions {
-            margin-top: 30px;
-        }
-    </style>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/update_account_style.css' %}">
 </head>
 <body>
     <div class="container">

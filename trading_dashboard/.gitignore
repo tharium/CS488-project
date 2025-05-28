@@ -31,6 +31,3 @@ debug.log
 *.swp
 *.swo
 
-# Ignore static files (if Django collects them to a separate folder)
-staticfiles/
-static/

@@ -1,5 +1,17 @@
 var stockChart = null;
 
+if (typeof isAuthenticated !== 'undefined' && isAuthenticated) {
+    const loginBtn = document.getElementById('login-button');
+    const signupBtn = document.getElementById('signup-button');
+    if (loginBtn) {
+        loginBtn.textContent = 'Logout';
+        loginBtn.href = '/logout/';
+    }
+    if (signupBtn) {
+        signupBtn.classList.add('hidden');
+    }
+}
+
 function fetchStockPrice() {
     let symbol = document.getElementById("stock-symbol").value;
     if (!symbol) {

@@ -149,6 +149,12 @@ def login_view(request):
 
     return render(request, "login.html")
 
+def logout_view(request):
+    """Logs out the user and redirects to the login page."""
+    logout(request)
+    messages.success(request, "You have been logged out successfully.")
+    return redirect("login")
+
 # Logout View
 def logout_view(request):
     logout(request)
@@ -224,11 +230,18 @@ def dashboard(request):
     #context for performance chart
     labels = []
     percent_changes = []
+    total_change_sum = 0
+    stock_count = 0
     for ws in watched_stocks:
         if ws.added_price and ws.stock.current_price:
             change = ((float(ws.stock.current_price) - float(ws.added_price)) / float(ws.added_price)) * 100
             labels.append(ws.stock.ticker)
             percent_changes.append(round(change, 2))
+
+            total_change_sum += change
+            stock_count += 1
+
+    average_percent_change = round(total_change_sum / stock_count, 2) if stock_count > 0 else 0
 
     chart_data = {
         'labels': labels,
@@ -288,6 +301,7 @@ def dashboard(request):
         all_news.extend(stock_news)
 
     context = {
+        "average_percent_change": average_percent_change,
         "total_value": total_value,
         "holdings" : holdings,
         "watched_stocks": watched_stocks,

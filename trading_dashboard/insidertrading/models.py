@@ -22,7 +22,8 @@ class WatchedStock(models.Model):
 class Stock(models.Model):
     ticker = models.CharField(max_length=10, unique=True)
     company_name = models.CharField(max_length=255)
-    sector = models.CharField(max_length=255)
+    sector = models.CharField(max_length=255, default='Unknown')
+    industry = models.CharField(max_length=255, default='Unknown')
     current_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     volume = models.IntegerField(default=0)
     high_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)

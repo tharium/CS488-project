@@ -1,0 +1,212 @@
+:root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --light-accent: #eaf2f8;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --warning-color: #f39c12;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px 0;
+        }
+
+        .signup-container {
+            max-width: 650px;
+            width: 90%;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin: 30px auto;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .logo-area {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            display: inline-block;
+            background: var(--light-accent);
+            width: 80px;
+            height: 80px;
+            line-height: 80px;
+            border-radius: 50%;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .form-floating {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--accent-color);
+                box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.2);
+            }
+
+        .input-group-text {
+            background-color: var(--light-accent);
+            color: var(--accent-color);
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-signup {
+            background-color: var(--accent-color);
+            border: none;
+            padding: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+            .btn-signup:hover {
+                background-color: #2980b9;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            }
+
+        .password-feedback {
+            margin-top: 5px;
+            font-size: 0.85rem;
+        }
+
+        .strength-meter {
+            height: 5px;
+            background-color: #ecf0f1;
+            margin-top: 10px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 19px;
+            color: #bdc3c7;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .form-check {
+            text-align: left;
+            margin: 25px 0;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            text-align: left;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            color: var(--success-color);
+            margin: 15px 0;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: left;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+
+        .verified-badge {
+            color: var(--success-color);
+            display: none;
+        }
+
+        /* Progress tracker styles */
+        .progress-tracker {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+
+            .requirement i {
+                margin-right: 8px;
+                color: #bdc3c7;
+            }
+
+            .requirement.met {
+                color: var(--success-color);
+            }
+
+                .requirement.met i {
+                    color: var(--success-color);
+                }
