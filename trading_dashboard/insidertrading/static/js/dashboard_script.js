@@ -1,6 +1,22 @@
 
         
 document.addEventListener('DOMContentLoaded', function () {
+    const sectorFilter = document.getElementById('sectorFilter');
+    const tableRows = document.querySelectorAll('#watchlistTable tbody tr');
+    
+    sectorFilter.addEventListener('change', function() {
+        const selectedSector = this.value;
+        
+        tableRows.forEach(row => {
+            const rowSector = row.getAttribute('data-sector');
+            if (selectedSector === '' || rowSector === selectedSector) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
     // Portfolio Performance Bar Chart
     if (window.chartData) {
         const { labels: chartLabels, percent_changes: percentChanges } = window.chartData;

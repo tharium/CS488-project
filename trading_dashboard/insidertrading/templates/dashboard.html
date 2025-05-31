@@ -265,8 +265,18 @@
                                     </div>
                                 </div>
 
+                                <!-- Sector Filter -->
+                                <div class="mb-3">
+                                    <select id="sectorFilter" class="form-control form-control-sm" style="width: auto; display: inline-block;">
+                                        <option value="">All Sectors</option>
+                                        {% for sector in sectors %}
+                                            <option value="{{ sector }}">{{ sector }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
                                 {% if watched_stocks %}
-                                <table class="table-responsive">
+                                <table class="table-responsive" id="watchlistTable">
                                     <thead>
                                         <tr>
                                             <th style="width: 20%;">Stock</th>
@@ -274,12 +284,16 @@
                                             <th style="width: 13%;">High</th>
                                             <th style="width: 13%;">Low</th>
                                             <th style="width: 13%;">Volume</th>
+                                            <th style="width: 15%;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for watched in watched_stocks %}
-                                            <tr>
-                                                <td><strong>{{ watched.stock.ticker }}</strong> - {{ watched.stock.company_name }}</td>
+                                            <tr data-sector="{{ watched.stock.sector }}">
+                                                <td>
+                                                    <strong>{{ watched.stock.ticker }}</strong> - {{ watched.stock.company_name }}
+                                                    <br><small class="text-muted">{{ watched.stock.sector }}</small>
+                                                </td>
                                                 <td>${{ watched.stock.current_price }}</td>
                                                 <td>${{ watched.stock.high_price }}</td>
                                                 <td>${{ watched.stock.low_price }}</td>

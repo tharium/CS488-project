@@ -229,7 +229,7 @@ def dashboard(request):
     watched_stocks = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')    
     holdings = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')
 
-     # update stock prices
+    # update stock prices
     for watched in watched_stocks:
         price_data = get_stock_price(watched.stock.ticker)
 
@@ -242,6 +242,11 @@ def dashboard(request):
         watched.stock.high_price = price_data["high"]
         watched.stock.low_price = price_data["low"]
         watched.stock.save()
+
+    #sectors for filter
+    sectors = Stock.objects.filter(
+        watchedstock__watchlist__user=request.user
+    ).values_list('sector', flat=True).distinct().order_by('sector')
 
     # gets total for holding value (not all stocks in watchlist)
     total_value = holdings.annotate(
@@ -336,6 +341,7 @@ def dashboard(request):
         "news_articles": all_news[:5],
         "chart_data": chart_data,
         "pie_chart_data": pie_chart_data,
+        "sectors": sectors,
     }
     return render(request, "dashboard.html", context)
 
