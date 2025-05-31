@@ -14,6 +14,7 @@
     <!-- Chart.js for charts -->
     <script>
         window.chartData = {{ chart_data|safe }};
+        window.sectorChartData = {{ pie_chart_data|safe }};
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
     <script src="{% static 'js/dashboard_script.js' %}"></script>
@@ -41,6 +42,11 @@
                         </label>
                         <span class="ml-2 text-light"><i class="fas fa-moon"></i></span>
                     </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/">
+                        <i class="fas fa-home mr-1"></i>Home
+                    </a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle position-relative" href="#" id="notificationsDropdown" role="button" data-toggle="dropdown">
@@ -73,7 +79,7 @@
                         <a class="dropdown-item" href="#"><i class="fas fa-cog mr-2"></i>Settings</a>
                         <a class="dropdown-item" href="/update_account/"><i class="fas fa-edit mr-2"></i>Update Account</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item delete-account" href="#" data-toggle="modal" data-target="#deleteAccountModal">
+                        <a class="dropdown-item delete-account" href="/delete_account/" data-toggle="modal" data-target="#deleteAccountModal">
                             <i class="fas fa-trash-alt mr-2"></i>Delete Account
                         </a>
                     </div>
@@ -151,15 +157,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Net Profit/Loss</h5>
-                                <h2 class="card-text positive-value">$8,000 Gain</h2>
-                                <small class="text-muted">Since inception (Jan 2025)</small>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
                 
                 <!-- Chart Section -->
@@ -224,6 +222,15 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Sector Allocation</h5>
+                        <canvas id="sectorPieChart"></canvas>
+                        </div>
+                </div>
+            </div>
             
             <div class="dashboard-section" id="transactions">
                 <h2>Search</h2>
@@ -248,12 +255,14 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between mb-3">
                                     <h5 class="card-title">Stocks I'm Watching</h5>
+                                    <div>
                                     <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#addStockModal">
                                         <i class="fas fa-plus"></i> Add
                                     </button>
                                     <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#shareWatchlistModel">
                                         <i class="fas fa-share"></i> Share
                                     </button>
+                                    </div>
                                 </div>
 
                                 {% if watched_stocks %}
@@ -269,20 +278,25 @@
                                     </thead>
                                     <tbody>
                                         {% for watched in watched_stocks %}
-                                        <tr>
-                                            <td><strong>{{ watched.stock.ticker }}</strong> - {{ watched.stock.company_name }}</td>
-                                            <td>${{ watched.stock.current_price }}</td>
-                                            <td>${{ watched.stock.high_price }}</td>
-                                            <td>${{ watched.stock.low_price }}</td>
-                                            <td>{{ watched.stock.volume }}</td>
-                                            <td>
-                                                <form method="POST" action="{% url 'remove_stock' watched.stock.ticker %}" style="display:inline;">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                                                </form>
-                                            </td>
+                                            <tr>
+                                                <td><strong>{{ watched.stock.ticker }}</strong> - {{ watched.stock.company_name }}</td>
+                                                <td>${{ watched.stock.current_price }}</td>
+                                                <td>${{ watched.stock.high_price }}</td>
+                                                <td>${{ watched.stock.low_price }}</td>
+                                                <td>{{ watched.stock.volume }}</td>
+                                                <td>
+                                                    <!-- Remove Button -->
+                                                    <form method="POST" action="{% url 'remove_stock' watched.stock.ticker %}" style="display:inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                                    </form>
 
-                                        </tr>
+                                                    <!-- Edit Button -->
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#editStockModal{{ watched.stock.ticker }}">
+                                                        Edit
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -569,7 +583,82 @@
         </form>
     </div>
     </div>
-    
+
+    <div class="modal fade" id="editStockModal" tabindex="-1" role="dialog" aria-labelledby="editStockModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="POST" action="{% url 'edit_notifications' %}">
+                {% csrf_token %}
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editStockModalLabel">Edit Stock Notification Preferences</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="watched_stock_id" id="watched_stock_id">
+
+                        <div class="form-group">
+                            <label>Notifications</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="notifications_enabled" id="notifications_enabled_yes" value="true" checked>
+                                <label class="form-check-label" for="notifications_enabled_yes">
+                                    Enabled
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="notifications_enabled" id="notifications_enabled_no" value="false">
+                                <label class="form-check-label" for="notifications_enabled_no">
+                                    Disabled
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Stock Modal -->
+     {% for watched in watched_stocks %}
+        <div class="modal fade" id="editStockModal{{ watched.stock.ticker }}" tabindex="-1" role="dialog" aria-labelledby="editStockModalLabel{{ watched.stock.ticker }}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form method="POST" action="{% url 'edit_notifications' %}">
+                    {% csrf_token %}
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editStockModalLabel{{ watched.stock.ticker }}">Edit Notifications - {{ watched.stock.ticker }}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="ticker" value="{{ watched.stock.ticker }}">
+
+                            <div class="form-group">
+                                <label for="notifications_enabled_{{ watched.stock.ticker }}">Notifications</label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox"
+                                        class="custom-control-input"
+                                        id="notifications_enabled_{{ watched.stock.ticker }}"
+                                        name="notifications_enabled"
+                                        {% if watched.notifications_enabled %}checked{% endif %}>
+                                    <label class="custom-control-label" for="notifications_enabled_{{ watched.stock.ticker }}">Enabled</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+        
     <!-- Bootstrap and jQuery Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>

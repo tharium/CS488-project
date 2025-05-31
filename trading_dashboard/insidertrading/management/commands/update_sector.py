@@ -1,6 +1,7 @@
 import yfinance as yf
 import time
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from insidertrading.models import Stock
 
 ''' This script updates the sector information for stocks in the database.
@@ -15,7 +16,7 @@ class Command(BaseCommand):
 def update_stock_sectors():
     """Update sector information for all stocks in the database"""
     
-    stocks_without_sector = Stock.objects.all()
+    stocks_without_sector = Stock.objects.all().filter(Q(sector='Unknown') | Q(sector__isnull=True) | Q(sector='')).order_by('ticker')
     
     total_stocks = stocks_without_sector.count()
     print(f"Found {total_stocks} stocks to update")

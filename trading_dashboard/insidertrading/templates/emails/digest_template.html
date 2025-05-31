@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Update - InsideTraders</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #212529;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 0;
+            border-radius: 12px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .email-header {
+            background: linear-gradient(135deg, #1e5799 0%, #2989d8 50%, #207cca 100%);
+            color: white;
+            padding: 28px 20px;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .logo {
+            margin-bottom: 15px;
+            font-size: 32px;
+        }
+
+        .email-body {
+            padding: 30px 40px;
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .greeting {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1e5799;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-top: 30px;
+        }
+
+        .section h3 {
+            color: #1e5799;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+
+        .stock {
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #1e5799;
+            border-radius: 4px;
+        }
+
+        .article {
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #2989d8;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+
+        .separator {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 20px 0;
+        }
+
+        .email-footer {
+            background-color: #f8f9fa;
+            font-size: 14px;
+            color: #6c757d;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .social-links {
+            margin: 15px 0;
+        }
+
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #1e5799;
+            font-size: 20px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="email-header">
+        <div class="logo">💹 InsideTraders</div>
+        <div>Stock Update</div>
+    </div>
+    <div class="email-body">
+        <p class="greeting">Hello, <strong>{{ username }}</strong>!</p>
+        <p>Here's your {{ frequency }} stock update:</p>
+
+        {% if watched_lines %}
+        <div class="section">
+            <h3>Your Watched Stocks</h3>
+            {% for line in watched_lines %}
+            <div class="stock">{{ line }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if article_lines %}
+        <div class="section">
+            <h3>Latest News Articles</h3>
+            {% for article in article_lines %}
+            <div class="article">{{ article }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="separator"></div>
+    </div>
+    <div class="email-footer">
+        <p>Get the latest market insights on our social media</p>
+        <div class="social-links">
+            <a href="#">📱</a>
+            <a href="#">📘</a>
+            <a href="#">📊</a>
+        </div>
+        <p>© 2025 InsideTraders. All Rights Reserved.</p>
+        <p>123 EWU</p>
+    </div>
+</div>
+</body>
+</html>

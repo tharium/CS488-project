@@ -63,8 +63,6 @@
 
                 <a id="login-button" href="/login/" class="btn btn-outline-light ms-3">Login</a>
 
-                <a id="register-button" href="/register/" class="btn btn-success ms-3">Sign Up</a>
-
             </div>
 
         </div>
@@ -81,25 +79,7 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <!-- <div class="container-box text-center">
-            <h3 class="mb-4">Check Stock Prices</h3>
-            <input type="text" class="form-control mb-3" id="stock-symbol" placeholder="Enter stock symbol">
-            <button class="btn btn-primary" onclick="fetchStockHistory()">Get Stock Data</button>
-            <select class="period-select" id="period-select">
-                <option value="1d">1 day</option>
-                <option value="5d">5 days</option>
-                <option value="1mo">1 mo.</option>
-                <option value="3mo">3 mo.</option>
-                <option value="6mo">6 mo.</option>
-                <option value="1y">1 y</option>
-                <option value="2y">2 y</option>
-                <option value="ytd">YTD</option>
-            </select>
-            <p id="result" class="mt-3"></p>
-            <button id="watchlist-button" class="btn btn-secondary mt-3" style="display: none;" onclick="addToWatchlist()">Add to Watchlist</button>
-        </div> -->
         <div class="stock-display text-center">
-            <canvas id="stockChart" width="600" height="600"></canvas>
 
         <div class="container">
 
@@ -121,7 +101,7 @@
 
         <div class="container">
 
-            <div class="row feature-row">
+            {% comment %} <div class="row feature-row">
 
                 <div class="col-md-4 mb-4 mb-md-0">
 
@@ -177,7 +157,7 @@
 
                 </div>
 
-            </div>
+            </div> {% endcomment %}
 
 
 
@@ -188,8 +168,6 @@
                 <div class="col-lg-8 mx-auto">
 
                     <div class="stock-card">
-
-                        <h3>Check Stock Prices</h3>
 
                         <div class="container-box text-center">
                             <h3 class="mb-4">Check Stock Prices</h3>
@@ -217,149 +195,11 @@
 
                         <p id="result" class="mt-4"></p>
 
-
-
-                        <div class="stock-stats">
-
-                            <div class="stat-item">
-
-                                <div class="stat-value">5,437</div>
-
-                                <div class="stat-label">Daily Trades</div>
-
-                            </div>
-
-                            <div class="stat-item">
-
-                                <div class="stat-value">98.2%</div>
-
-                                <div class="stat-label">Uptime</div>
-
-                            </div>
-
-                            <div class="stat-item">
-
-                                <div class="stat-value">0.25s</div>
-
-                                <div class="stat-label">Response Time</div>
-
-                            </div>
-
-                        </div>
-
                     </div>
 
                 </div>
 
             </div>
-
-            <!-- Testimonials Section -->
-
-            <section class="testimonials">
-
-                <div class="container">
-
-                    <h2 class="text-center mb-5">What Our Traders Say</h2>
-
-                    <div class="row">
-
-                        <div class="col-md-4 mb-4 mb-md-0">
-
-                            <div class="testimonial-card">
-
-                                <div class="testimonial-text">
-
-                                    "InsideTraders
-
-                                    completely transformed my trading strategy. The real-time insights and analytics helped me increase my portfolio returns by 28% in just 3 months."
-
-                                </div>
-
-                                <div class="testimonial-author">
-
-                                    <!-- <img src="/api/placeholder/100/100" alt="Sarah J."> -->
-
-                                    <div class="author-info">
-
-                                        <h4>Sarah J.</h4>
-
-                                        <p>Day Trader</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4 mb-4 mb-md-0">
-
-                            <div class="testimonial-card">
-
-                                <div class="testimonial-text">
-
-                                    "As a beginner investor, I needed something reliable and easy to use. InsideTraders
-
-                                    provides exactly that, with incredible customer support always available to answer my questions."
-
-                                </div>
-
-                                <div class="testimonial-author">
-
-                                    <!-- <img src="/api/placeholder/100/100" alt="Michael T."> -->
-
-                                    <div class="author-info">
-
-                                        <h4>Michael T.</h4>
-
-                                        <p>Retail Investor</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-4">
-
-                            <div class="testimonial-card">
-
-                                <div class="testimonial-text">
-
-                                    "The algorithm-based recommendations are amazingly accurate. I've been using InsideTraders
-
-                                    for my firm's portfolio management, and we've consistently outperformed market benchmarks."
-
-                                </div>
-
-                                <div class="testimonial-author">
-
-                                    <!-- <img src="/api/placeholder/100/100" alt="David R."> -->
-
-                                    <div class="author-info">
-
-                                        <h4>David R.</h4>
-
-                                        <p>Portfolio Manager</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
 
             <!-- Footer -->
 
@@ -373,7 +213,7 @@
 
                             <a href="#" class="footer-logo"><i class="fas fa-chart-line"></i> InsideTraders</a>
 
-                            <p class="footer-text">Empowering traders with cutting-edge technology and real-time market data since 2020. Your trusted partner for smarter trading decisions.</p>
+                            <p class="footer-text">Empowering traders with cutting-edge technology and real-time market data since 2025. Your trusted partner for smarter trading decisions.</p>
 
                             <div class="social-links">
 

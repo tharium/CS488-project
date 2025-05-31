@@ -8,11 +8,14 @@ from django.db.models import Q, F, Sum, ExpressionWrapper, DecimalField
 from .models import Watchlist, Stock, Profile, WatchedStock, newsArticle
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.views.decorators.http import require_POST
 from django.core.signing import BadSignature, TimestampSigner
+from django.template.loader import render_to_string
 from .utils.news import fetch_and_store_news
 from django.http import JsonResponse
+from collections import defaultdict
+from django.utils import timezone
 from decimal import Decimal
 import secrets
 import yfinance as yf
@@ -66,14 +69,19 @@ def register_view(request):
 
         verification_link = request.build_absolute_uri(f'/verify-email/{token}/')
 
+        subject = "Verify Your Email - Trading Dashboard"
+        from_email = "tradingdashboardbot@gmail.com"
+        to = [email]
+
+        # Create the email content
+        email_content = render_to_string('emails/verification_template.html',{
+            'username': username,
+            'verification_link': verification_link
+        })
         # Send verification email
-        send_mail(
-            "Verify Your Email - Trading Dashboard",
-            f"Hello {username},\n\nClick the link below to verify your email:\n{verification_link}\n\nThank you!",
-            "tradingdashboardbot@gmail.com",
-            [email],
-            fail_silently=False,
-        )
+        email_message = EmailMultiAlternatives(subject, email_content, from_email, to)
+        email_message.attach_alternative(email_content, "text/html")
+        email_message.send(fail_silently=False)
 
         messages.success(request, "A verification email has been sent. Please check your email.")
         return redirect("/")
@@ -199,7 +207,7 @@ def update_account(request):
         if password1:
             user.set_password(password1)
         if notification_frequency:
-            profile = user.profile  # assuming a OneToOneField from User to Profile
+            profile = user.profile
             profile.notification_frequency = notification_frequency
             profile.save()
         if blocked_sources:
@@ -210,6 +218,8 @@ def update_account(request):
 
         user.save()
 
+        return redirect("dashboard")
+
     return render(request, "update_account.html")
 
 @login_required
@@ -219,36 +229,7 @@ def dashboard(request):
     watched_stocks = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')    
     holdings = WatchedStock.objects.filter(watchlist=watchlist).select_related('stock')
 
-    # gets total for holding value (not all stocks in watchlist)
-    total_value = holdings.annotate(
-        current_value=ExpressionWrapper(
-            F('amount_held') * F('stock__current_price'),
-            output_field=DecimalField(max_digits=20, decimal_places=2)
-        )
-    ).aggregate(total=Sum('current_value'))['total'] or 0
-
-    #context for performance chart
-    labels = []
-    percent_changes = []
-    total_change_sum = 0
-    stock_count = 0
-    for ws in watched_stocks:
-        if ws.added_price and ws.stock.current_price:
-            change = ((float(ws.stock.current_price) - float(ws.added_price)) / float(ws.added_price)) * 100
-            labels.append(ws.stock.ticker)
-            percent_changes.append(round(change, 2))
-
-            total_change_sum += change
-            stock_count += 1
-
-    average_percent_change = round(total_change_sum / stock_count, 2) if stock_count > 0 else 0
-
-    chart_data = {
-        'labels': labels,
-        'percent_changes': percent_changes,
-    }
-
-    # update stock prices
+     # update stock prices
     for watched in watched_stocks:
         price_data = get_stock_price(watched.stock.ticker)
 
@@ -262,6 +243,44 @@ def dashboard(request):
         watched.stock.low_price = price_data["low"]
         watched.stock.save()
 
+    # gets total for holding value (not all stocks in watchlist)
+    total_value = holdings.annotate(
+        current_value=ExpressionWrapper(
+            F('amount_held') * F('stock__current_price'),
+            output_field=DecimalField(max_digits=20, decimal_places=2)
+        )
+    ).aggregate(total=Sum('current_value'))['total'] or 0
+
+    #context for performance chart and pie chart
+    sector_values = defaultdict(int)
+    labels = []
+    percent_changes = []
+    total_change_sum = 0
+    stock_count = 0
+    for ws in watched_stocks:
+        if ws.added_price and ws.stock.current_price:
+            change = ((float(ws.stock.current_price) - float(ws.added_price)) / float(ws.added_price)) * 100
+            labels.append(ws.stock.ticker)
+            percent_changes.append(round(change, 2))
+
+            total_change_sum += change
+            stock_count += 1
+        
+        sector = ws.stock.sector or "Unknown"
+        sector_values[sector] +=  1
+
+    pie_chart_data = {
+        'labels': list(sector_values.keys()),
+        'values': list(sector_values.values()),
+    }
+
+    average_percent_change = round(total_change_sum / stock_count, 2) if stock_count > 0 else 0
+
+    chart_data = {
+        'labels': labels,
+        'percent_changes': percent_changes,
+    }
+
     # check for price triggers, checks when dashboard is loaded (when the price is pulled from API)
     # best choice since this runs on localhost and can not be scheduled
     # in production, this should be run as a cron job or similar
@@ -274,13 +293,22 @@ def dashboard(request):
                     triggered.append(watched.stock.ticker)
 
             if triggered:
-                send_mail(
-                    subject="Price Alert Triggered",
-                    message="Price thresholds reached:\n" + "\n".join(triggered),
-                    from_email="tradingdashboardbot@gmail.com",
-                    recipient_list=[request.user.email],
-                    fail_silently=True,
-                )
+
+                subject = "Price Alert Triggered"
+                from_email = "tradingdashboardbot@gmail.com"
+                to = [request.user.email]
+
+                # Create the email content
+                email_content = render_to_string('emails/trigger_template.html',{
+                    'username': request.user.username,
+                    'triggered': ','.join(triggered)
+                })
+                # Send trigger email
+                email_message = EmailMultiAlternatives(subject, email_content, from_email, to)
+                email_message.attach_alternative(email_content, "text/html")
+                email_message.send(fail_silently=False)
+
+
 
     profile = getattr(request.user, 'profile', None)
     blocked = [s.upper() for s in profile.blocked_sources] if profile else []
@@ -307,6 +335,7 @@ def dashboard(request):
         "watched_stocks": watched_stocks,
         "news_articles": all_news[:5],
         "chart_data": chart_data,
+        "pie_chart_data": pie_chart_data,
     }
     return render(request, "dashboard.html", context)
 
@@ -317,14 +346,17 @@ def search_stock(request):
     in_watchlist = False
 
     if query:
-        try:
-            searched_stock = Stock.objects.get(
-                Q(ticker__iexact=query) | Q(company_name__icontains=query)
-            )
-            watchlist = Watchlist.objects.get(user=request.user)
-            in_watchlist = searched_stock in watchlist.stocks.all()
-        except Stock.DoesNotExist:
-            searched_stock = None
+        searched_stock = Stock.objects.filter(ticker__iexact=query).first()
+
+        if not searched_stock:
+            searched_stock = Stock.objects.filter(company_name__icontains=query).first()
+
+        if searched_stock:
+            try:
+                watchlist = Watchlist.objects.get(user=request.user)
+                in_watchlist = searched_stock in watchlist.stocks.all()
+            except Watchlist.DoesNotExist:
+                in_watchlist = False
 
     context = {
         'search_query': query,
@@ -376,7 +408,12 @@ def add_stock(request):
         if WatchedStock.objects.filter(watchlist=watchlist, stock=stock).exists():
             messages.error(request, "Stock is already in your watchlist.")
         else:
-            WatchedStock.objects.create(watchlist=watchlist, stock=stock)
+            WatchedStock.objects.create(
+                watchlist=watchlist,
+                stock=stock,
+                added_price=stock.current_price,
+                added_at=timezone.now().date()
+            )
             messages.success(request, f"Added {stock.ticker} to your watchlist!")
 
         return redirect('dashboard')
@@ -579,3 +616,24 @@ def refresh_news(request):
     fetch_and_store_news()
     messages.success(request, "News refreshed.")
     return redirect('dashboard')
+
+@require_POST
+@login_required
+def edit_notifications(request):
+    user = request.user
+    ticker = request.POST.get('ticker', '').upper()
+    enabled = request.POST.get('notifications_enabled') == 'true'
+
+    ws = get_object_or_404(WatchedStock, watchlist__user=user, stock__ticker=ticker)
+    ws.notifications_enabled = enabled
+    ws.save()
+    return redirect('dashboard')
+
+@login_required
+def delete_account(request):
+    user = request.user
+    if request.method == "POST":
+        user.delete()
+        messages.success(request, "Your account has been deleted.")
+        return redirect("index.html")
+    return render(request, "delete_account.html", {"user": user})

@@ -1,14 +1,13 @@
 
         
-        // Initialize charts
-        document.addEventListener('DOMContentLoaded', function() {
-            const chartData = window.chartData;
+document.addEventListener('DOMContentLoaded', function () {
+    // Portfolio Performance Bar Chart
+    if (window.chartData) {
+        const { labels: chartLabels, percent_changes: percentChanges } = window.chartData;
 
-            const chartLabels = chartData.labels
-            const percentChanges = chartData.percent_changes
-
-            const ctx = document.getElementById('portfolioPerformanceChart').getContext('2d');
-            new Chart(ctx, {
+        const performanceCtx = document.getElementById('portfolioPerformanceChart')?.getContext('2d');
+        if (performanceCtx) {
+            new Chart(performanceCtx, {
                 type: 'bar',
                 data: {
                     labels: chartLabels,
@@ -30,47 +29,53 @@
                     }
                 }
             });
-        
-            
-            // Asset Allocation Chart
-            const allocCtx = document.getElementById('assetAllocationChart').getContext('2d');
-            const allocChart = new Chart(allocCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Stocks', 'Bonds', 'Cash', 'Real Estate', 'Crypto'],
-                    datasets: [{
-                        data: [65, 15, 10, 7, 3],
-                        backgroundColor: [
-                            '#3498db',
-                            '#2ecc71',
-                            '#f1c40f',
-                            '#e74c3c',
-                            '#9b59b6'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
+        }
+    }
+
+    // Sector Pie Chart
+    if (window.sectorChartData) {
+        const pieData = {
+            labels: window.sectorChartData.labels,
+            datasets: [{
+                data: window.sectorChartData.values,
+                backgroundColor: [
+                    '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',
+                    '#e74a3b', '#858796', '#20c9a6', '#ff6384',
+                ],
+                borderWidth: 1,
+            }]
+        };
+
+        const pieConfig = {
+            type: 'pie',
+            data: pieData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    title: { display: true, text: 'Stocks by Sector' }
                 }
-            });
-            
-             // Sparklines for watchlist
-    document.querySelectorAll('.sparkline-container').forEach(function(canvas) {
+            }
+        };
+
+        const pieCanvas = document.getElementById('sectorPieChart');
+        if (pieCanvas) {
+            new Chart(pieCanvas, pieConfig);
+        }
+    }
+
+    // Sparklines
+    document.querySelectorAll('.sparkline-container').forEach(function (canvas) {
         const values = JSON.parse(canvas.dataset.values);
         const ctx = canvas.getContext('2d');
+
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: Array(values.length).fill(''),
                 datasets: [{
                     data: values,
-                    borderColor: values[0] < values[values.length-1] ? '#2ecc71' : '#e74c3c',
+                    borderColor: values[0] < values[values.length - 1] ? '#2ecc71' : '#e74c3c',
                     backgroundColor: 'transparent',
                     borderWidth: 1.5,
                     pointRadius: 0,
@@ -81,92 +86,93 @@
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: false
-                    }
+                    legend: { display: false },
+                    tooltip: { enabled: false }
                 },
                 scales: {
-                    x: {
-                        display: false,
-                        grid: {
-                            display: false
-                        }
-                    },
+                    x: { display: false, grid: { display: false } },
                     y: {
                         display: false,
-                        grid: {
-                            display: false
-                        },
+                        grid: { display: false },
                         min: Math.min(...values) * 0.99,
                         max: Math.max(...values) * 1.01
                     }
                 },
                 elements: {
-                    line: {
-                        borderWidth: 1.5
-                    },
-                    point: {
-                        radius: 0
-                    }
+                    line: { borderWidth: 1.5 },
+                    point: { radius: 0 }
                 },
                 animation: false
             }
         });
-        });
+    });
 
-            // Theme toggle functionality
-        document.getElementById('checkbox').addEventListener('change', function() {
+    // Theme Toggle
+    const themeCheckbox = document.getElementById('checkbox');
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', function () {
             document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         });
-                
-        // Check for saved theme preference
+
         if (localStorage.getItem('darkMode') === 'true') {
             document.body.classList.add('dark-mode');
-            document.getElementById('checkbox').checked = true;
+            themeCheckbox.checked = true;
         }
+    }
 
-        document.getElementById("search-form").addEventListener("submit", function(e) {
+    // Stock Search AJAX
+    const searchForm = document.getElementById('search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const query = this.querySelector("input[name='q']").value;
-        
+
             fetch(`/search-stock/?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
+                headers: { "X-Requested-With": "XMLHttpRequest" }
             })
             .then(response => response.text())
             .then(html => {
                 document.getElementById("search-result-container").innerHTML = html;
-                attachAddStockListener(); // hook up dynamic form
+                attachAddStockListener();
             });
         });
-        
-        function attachAddStockListener() {
-            const form = document.querySelector(".add-stock-form");
-            if (!form) return;
-        
-            form.addEventListener("submit", function(e) {
-                e.preventDefault();
-                const csrf = form.querySelector("[name=csrfmiddlewaretoken]").value;
-        
-                fetch(form.action, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": csrf,
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("search-form").dispatchEvent(new Event("submit")); // refresh search
-                });
-            });
-        }
+    }
 
+    function attachAddStockListener() {
+    const form = document.querySelector(".add-stock-form");
+    if (!form) return;
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const csrf = form.querySelector("[name=csrfmiddlewaretoken]").value;
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrf,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: formData
+        })
+        .then(res => {
+            if (res.redirected) {
+                window.location.href = res.url;
+                return;
+            }
+            return res.json();
+        })
+        .then(() => {
+            
+            document.getElementById("search-form").dispatchEvent(new Event("submit"));
+        })
+        .catch(err => {
+            console.error("Error adding stock:", err);
+        });
     });
+}
+});
 
     
