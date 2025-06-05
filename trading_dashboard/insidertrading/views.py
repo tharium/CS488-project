@@ -16,10 +16,12 @@ from .utils.news import fetch_and_store_news
 from django.http import JsonResponse
 from collections import defaultdict
 from django.utils import timezone
+from django.conf import settings
 from decimal import Decimal
 import secrets
 import yfinance as yf
 import datetime
+import time
 
 import logging
 logger = logging.getLogger(__name__)
@@ -643,3 +645,38 @@ def delete_account(request):
         messages.success(request, "Your account has been deleted.")
         return redirect("index.html")
     return render(request, "delete_account.html", {"user": user})
+
+def api_tickers(request):
+    # Define default tickers if not in settings
+    symbols = getattr(settings, "DEFAULT_TICKERS", ['MSFT', 'NVDA', 'AAPL', 'AVGO', 'ORCL', 'PLTR', 'CRM', 'CSCO', 'IBM', 'NOW', 
+ 'INTU', 'ACN', 'UBER', 'ADBE', 'AMD', 'QCOM', 'TXN', 'ADP', 'AMAT', 'APP', 
+ 'ANET', 'CRWD', 'ADI', 'LRCX', 'MU'])
+    out = []
+    
+    for sym in symbols:
+        try:
+            ticker = yf.Ticker(sym)
+            hist = ticker.history(period="2d")
+            
+            if len(hist) >= 2:
+                prev = hist["Close"].iloc[-2]
+                latest = hist["Close"].iloc[-1]
+                change_pct = (latest - prev) / prev * 100
+            else:
+                latest = hist["Close"].iloc[-1] if len(hist) > 0 else 0
+                change_pct = 0
+
+            time.sleep(0.3)
+                
+        except Exception as e:
+            print(f"Error fetching data for {sym}: {e}")
+            latest = 0
+            change_pct = 0
+            
+        out.append({
+            "symbol": sym,
+            "price": float(latest),
+            "change_pct": float(change_pct),
+        })
+    
+    return JsonResponse(out, safe=False)

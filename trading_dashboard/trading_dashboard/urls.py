@@ -81,5 +81,7 @@ urlpatterns = [
 
     path('edit_notifications/', views.edit_notifications, name='edit_notifications'),
 
-    path('delete_account/', views.delete_account, name='delete_account')
+    path('delete_account/', views.delete_account, name='delete_account'),
+
+    path('api/tickers/', views.api_tickers, name='api_tickers'),
 ]

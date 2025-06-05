@@ -27,5 +27,6 @@ urlpatterns = [
     path('share_watchlist/', views.share_watchlist, name='share_watchlist'),
     path('refresh-news/', views.refresh_news, name='refresh_news'),
     path('edit_notifications/', views.edit_notifications, name='edit_notifications'),
-    path('delete_account/', views.delete_account, name='delete_account')
+    path('delete_account/', views.delete_account, name='delete_account'),
+    path('api/tickers/', views.api_tickers, name='api_tickers'),
 ]

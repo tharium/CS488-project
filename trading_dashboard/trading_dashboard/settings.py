@@ -143,3 +143,11 @@ DEFAULT_FROM_EMAIL = "Trading Dashboard <tradingdashboardbot@gmail.com>"
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+DEFAULT_TICKERS = [
+    "MSFT","NVDA","AAPL","AVGO","ORCL","PLTR","CRM","CSCO","IBM","NOW",
+    "INTU","ACN","UBER","ADBE","AMD","QCOM","TXN","ADP","AMAT","APP",
+    "ANET","CRWD","ADI","LRCX","MU","APH","KLAC","FI","MSTR","CDNS",
+    "INTC","FTNT","DELL","SNPS","MSI","SNOW","ADSK","WDAY","PANW","ROP",
+    "PAYX","NET","TEAM","MRVL","NXPI","TEL","FIS","GLW","FICO","CTSH",
+]
